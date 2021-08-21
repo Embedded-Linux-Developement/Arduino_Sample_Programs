@@ -1,6 +1,11 @@
 
 #include "driver/pcnt.h"                                 /* Include the required header file, Its working Arduion IDE 2.0*/
 
+/* For detailed reference please follow the documentations in following Link:- 
+  Link:- https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/peripherals/pcnt.html
+*/
+
+
 #define PCNT_UNIT_Used      PCNT_UNIT_0                  /* Select the Pulse Count 0  as the unit..*/
 #define PCNT_H_LIM_VAL      10000                        /* Set the max limit to trigger the interrupt*/
 #define PCNT_INPUT_SIG_IO   4                            /* Pulse Input selected as GPIO 4 */
