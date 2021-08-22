@@ -58,8 +58,10 @@ void Init_PulseCounter (void)
 void Clean_Counters()                                       
 {
 
+  pcnt_counter_pause(PCNT_UNIT_Used);                      // Pause PCNT counter such that we can set event.
   contadorOverflow = 0;                                     // Clear global Over flow counter.
   pcnt_counter_clear(PCNT_UNIT_Used);                       // Clean Pulse Counter...
+  pcnt_counter_resume(PCNT_UNIT_Used);                       // Re-started PCNT.
 
 }
 
