@@ -33,10 +33,10 @@ version:- V1.0.1
 *******************************************************************************************************/
 
 /* Port Pin tp out the Morse code*/
-#define Morse_Code_LED 4
+#define Morse_Code_LED 2
 
 /* Period of the Morse code processing task in ms, 
- It should be minimum 3 times shorter than Dot ON time, 
+ It should be minimum 5 times shorter than Dot ON time, 
  for accuracy reasion in high load case.*/
 #define Morse_Code_processing_Task_Perion_ms 50
 
@@ -61,14 +61,14 @@ version:- V1.0.1
 #define Morse_Code_BwtCharacter_Time Morse_Code_Dash_Time
 
 /* Represent time between 2 word in same word = 7 x Dash Time  */
-#define Morse_Code_BwtCharacter_Time (7 * Morse_Code_Dash_Time)
+#define Morse_Code_BwtWord_Time (7 * Morse_Code_Dash_Time)
 
 
 
 /* Character representing the Dot sound, Its use to configure different Charactres */
 #define Morse_Dot_Char  '.'
 /* Character representing the Dash sound */
-#define Morse_Dot_Char  '_'
+#define Morse_Dash_Char  '_'
 /* Represent sizes of each buffer.*/
 #define MC_Sizes_Buffer_0 25
 #define MC_Sizes_Buffer_1 50
