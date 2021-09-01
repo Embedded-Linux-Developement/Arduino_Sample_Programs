@@ -60,8 +60,8 @@ version:- V1.0.1
 /* Represent time between 2 character in same word =  Dash Time  */
 #define Morse_Code_BwtCharacter_Time Morse_Code_Dash_Time
 
-/* Represent time between 2 word in same word = 7 x Dash Time  */
-#define Morse_Code_BwtWord_Time (7 * Morse_Code_Dash_Time)
+/* Represent time between 2 word in same word = 7 x Dot Time  */
+#define Morse_Code_BwtWord_Time (7 * Morse_Code_Dot_Time)
 
 
 

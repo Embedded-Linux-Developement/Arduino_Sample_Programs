@@ -122,8 +122,18 @@ const Morse_Code_Parten_Table_Type MorseCodePaternDatabase[Maximum_Supported_Pat
   {'/',"_.._."}
 };
 
+/* Macro to enable of dissable the Delimiter after each butter, Shall add additional bytes
+   True => Enable
+   False => Dissabled
+*/
+#define Add_Buffer_Delimiter True
+
 /* Additional margin for buffer to ass special characters*/
+#if (Add_Buffer_Delimiter == True)
+#define BufferAdditionalMargin 5  
+#else
 #define BufferAdditionalMargin 2
+#endif
 
 /* Buffer for each based on defined sizes*/
 static char MC_Buffer_0_String[MC_Sizes_Buffer_0 + BufferAdditionalMargin ];
@@ -173,7 +183,7 @@ void Get_Encoded_MorseCode(char InputChar, char *OutputEncodedBuffer)
   /* Static Variable to store previous requested character, Just to speed up is keep on requesting*/
   static char Previous_InputChar = 0xff;
   /* Static variable to hold previous Encoded string*/
-  char Previous_OutputEncodedBuffer[10];
+  static char Previous_OutputEncodedBuffer[(Maximum_PatenBits + 2)] = " ";
   /* Index of the loop*/
   unsigned char Index;
 
@@ -210,6 +220,8 @@ void Get_Encoded_MorseCode(char InputChar, char *OutputEncodedBuffer)
 
   /* Copy final output to the output array*/
   strcpy((char *)OutputEncodedBuffer, (char *)Previous_OutputEncodedBuffer);
+
+
 }
 
 /* ************************************************************************
@@ -315,9 +327,11 @@ void Process_MorseCode(void)
  case MC_Generation_CharEncoding:
  {
 
+
    /* Check wheather Buffer Index is within the range, else reset*/
    if (Each_Buffer_Char_Index < (MC_Sizes_MirrorBuffer + BufferAdditionalMargin))
    {
+
      /* Record current Tike time consumed*/
      Pre_Wait_Counter_Increment();
 
@@ -371,6 +385,7 @@ void Process_MorseCode(void)
      Each_Buffer_Char_Index = 0;
      /* Switch the Pipeline to start, Error Recover*/
      CurrentBufferPipeline = MC_Generation_Mirroring;
+
    }
 
    break;
@@ -390,14 +405,14 @@ void Process_MorseCode(void)
    Pre_Wait_Counter_Increment();/* One tick being already consumed in this tick*/
 
    /* Check if buffer for encoder overrun */
-   if (Each_Buffer_Char_Index < (Maximum_PatenBits + 2))
+   if (Each_Char_Encoding_Index < (Maximum_PatenBits + 2))
    {
 
      /* Check if its a Null charactor*/
-     if (Each_Char_Encoded_Buffer[Each_Buffer_Char_Index] == '\0')
+     if (Each_Char_Encoded_Buffer[Each_Char_Encoding_Index] == '\0')
      {
        /* Clear buffer Index */
-       Each_Buffer_Char_Index = 0;
+       Each_Char_Encoding_Index = 0;
 
        /* Check if previous time is less than required one */
        if (PreWaiting_Time < Morse_Code_BwtCharacter_Time)
@@ -420,13 +435,13 @@ void Process_MorseCode(void)
        /* Set waitting time */
        PreWaiting_Time = 1; /* One tick being already consumed in this tick*/
        /* Check if the current pattern in Dot*/
-       if (Each_Char_Encoded_Buffer[Each_Buffer_Char_Index] == Morse_Dot_Char)
+       if (Each_Char_Encoded_Buffer[Each_Char_Encoding_Index] == Morse_Dot_Char)
        {
          /* Store the ON time for Dot*/
          Waiting_Time = Morse_Code_Dot_Time - PreWaiting_Time; 
        }
        /* Check if the current pattern in Dot*/
-       else if (Each_Char_Encoded_Buffer[Each_Buffer_Char_Index] == Morse_Dash_Char)
+       else if (Each_Char_Encoded_Buffer[Each_Char_Encoding_Index] == Morse_Dash_Char)
        {
          /* Store the ON time for Dot*/
          Waiting_Time = Morse_Code_Dash_Time - PreWaiting_Time; 
@@ -452,14 +467,14 @@ void Process_MorseCode(void)
        }
 
        /* Increase the pointer*/
-       Each_Buffer_Char_Index++;
+       Each_Char_Encoding_Index++;
      }
    }
    /* Encoding buffer overflowed*/
    else
    {
      /* Clear buffer Index */
-     Each_Buffer_Char_Index = 0;
+     Each_Char_Encoding_Index = 0;
 
      /* Set Timeout for Charactor wait*/
      Waiting_Time = Morse_Code_BwtCharacter_Time - PreWaiting_Time; 
@@ -482,6 +497,7 @@ void Process_MorseCode(void)
   -----------------------------------------------------------------*/
  case MC_Generation_SigTx_ON_wait:
  {
+
    /* Decrement the Wait counter, if its Not Zero */
    Wait_Counter_Decrement();
 
@@ -795,12 +811,26 @@ void Morse_Code_Sent(const char *InputString, Morse_Code_Out_BUffer DestBuffer)
       /* Copy content*/
       CurrentBufferPrt[BufferIndex] = InputString[BufferIndex];
       /* Convert to Lowe case if any */
-      if (( CurrentBufferPrt[BufferIndex] & 0xDF >= 'A' ) && ( CurrentBufferPrt[BufferIndex] & 0xDF <= 'Z' )) 
+      if (( CurrentBufferPrt[BufferIndex] >= 'A' ) && ( CurrentBufferPrt[BufferIndex] <= 'Z' )) 
       {
-         CurrentBufferPrt[BufferIndex]  &= 0xDF; // so that bit 5 only gets cleared for alphas 
+         CurrentBufferPrt[BufferIndex]  += 0x20; // so that bit 5 only gets cleared for alphas 
       }
      
     }
+
+/* If addition of delimiter is enabled.*/
+#if (Add_Buffer_Delimiter == True)
+    
+    /* Add delimiter*/
+    CurrentBufferPrt[BufferIndex] = ' ';
+    BufferIndex++;
+    CurrentBufferPrt[BufferIndex] = ':';
+    BufferIndex++;
+    CurrentBufferPrt[BufferIndex] = ' ';
+    BufferIndex++;
+
+#endif
+
     /* Add Null Character at the end */
     CurrentBufferPrt[BufferIndex] = '\0';
 
