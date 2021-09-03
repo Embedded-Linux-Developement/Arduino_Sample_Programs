@@ -75,7 +75,7 @@ const Morse_Code_Parten_Table_Type MorseCodePaternDatabase[Maximum_Supported_Pat
   {'i',".."},
   {'j',".___"},
   {'k',"_._"},
-  {'l',"._..."},
+  {'l',"._.."},
   {'m',"__"},
   {'n',"_."},
   {'o',"___"},
