@@ -25,10 +25,10 @@ void loop()
 
 
 /* Test Case:- 1, 
-   1. Test with half the Queue and each have Moderate Buffer sizes ~60*50 = 3000Byte
+   1. Test with half the Queue and each have Moderate Buffer sizes ~67*50 = 3350 Byte
  */
 
-for (Loop_Index = 0; Loop_Index < Max_BackGround_Buffer_Queue; Loop_Index++)
+for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue/2); Loop_Index++)
 {
    Debug_Trace("Hello I am here, To Test the debug Trace printing_ %03d ", Loop_Index);
 }
@@ -36,5 +36,5 @@ for (Loop_Index = 0; Loop_Index < Max_BackGround_Buffer_Queue; Loop_Index++)
 
 
 
-delay(500);
+delay(10000);
 }

@@ -64,7 +64,7 @@ typedef struct BackGround_Queue_Table_Tag {
    BufferAddType               BUfferStartAdd;               /* Represent the start add of the buffer, Its Virtual adders start from 0 to "Max_BackGround_Buffer_Reserved" */
    BufferAddType               BUfferSize;                   /* Represent the sizes of the buffer including \0. and can have maximum size of "Max_Debug_Buffer" */
    BackGround_Queue_Status     Queue_Status;                 /* Represent status if the Queue. */   
-  /* Check if Queue is supported.*/ 
+  /* Check if Queue Timeout is supported.*/ 
 #if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON) )
    unsigned long               Queue_Processing_Start_Time;  /* Represent the time at which "BackGround_Queue_FillInProgres" state is changes, Can use to applat timeout id required.*/   
 #endif
@@ -640,7 +640,10 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
       BackGround_Queue[Return_Queue_Index].Queue_Status = BackGround_Queue_Empty;
       BackGround_Queue[Return_Queue_Index].BUfferSize = 0;
       BackGround_Queue[Return_Queue_Index].BUfferStartAdd = 0;
+/* Check if Queue Timeout is supported.*/ 
+#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON) )
       BackGround_Queue[Return_Queue_Index].Queue_Processing_Start_Time = 0;
+#endif
 
       /* Pull Queue end back one step.*/
       /* Check wheather its needs to cycle, If so make it overflow. */
@@ -739,7 +742,7 @@ void Init_Trace(void)
     BackGround_Queue[Index].Queue_Status = BackGround_Queue_Empty;
 
     /* Check wheather time out is Supported.*/
-#if (BackGround_Debug_Trace_TimeOut > 0) 
+#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON) )
    BackGround_Queue[Index].Queue_Processing_Start_Time = 0;
 #endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
   }
