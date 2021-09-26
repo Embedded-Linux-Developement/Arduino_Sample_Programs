@@ -619,8 +619,10 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
 #if (Enable_Background_WaitForBuffer == Config_ON) /* If needs to waite.*/
 
       /* Add delay equivelent to processing task period for Background task.*/
-      /* If still enough buffer is not availabe. */
-      if (RequiredBufferSizes != BackGround_Queue[Return_Queue_Index].BUfferSize)
+      /* If still enough buffer is not availabe. 
+          And Do Not add delay if required memory is already freed*/
+      if ((RequiredBufferSizes != BackGround_Queue[Return_Queue_Index].BUfferSize) &&
+          (RequiredBufferSizes > BackGround_Total_Free_Buffer_Sizes))
       {
         /* Waite for waitting period because buffer is full.*/
         vTaskDelay(BackGround_Each_cycleWaittingDelay / portTICK_PERIOD_MS);
