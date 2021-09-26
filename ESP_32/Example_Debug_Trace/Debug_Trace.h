@@ -86,6 +86,20 @@ version:- V1.0.1
 /* To Define the priority of the task, Grater the value grater the priority, SO please try to select one with lowest priority.*/
 #define BackGround_Debug_Trace_Task_Priority 0 
 
+/* To Define the waiting delay after unsuccessful attempt, 
+   Can consider the smallest intervall befor checking again wheather any Queue is get freed.. 
+   This time shall option shall applicable only when Enable_Background_WaitForBuffer = True.
+ */
+#define BackGround_Each_cycleWaittingDelay 30 
+
+/* To Define the Queue timeout, Use for cancell or ignore the Queue once timeout is detected. 
+     If cannot complete the printing withen mentioned time then Queue content shall be ignored, Only id there is NO free buffer or Queue available. 
+    unit in ms
+    Support only when Enable_Background_WaitForBuffer = True
+    0 ==> Indicate No support for timeout.
+    2000 ==> Indicate 2sec / 2000ms Time out if Free Buffer or Queue is not available.*/
+#define BackGround_Debug_Trace_TimeOut  30000
+
 /*-----------------------------------------------------------------------------
  *  Generic Utility Configuration END
 -------------------------------------------------------------------------------*/
