@@ -191,10 +191,132 @@ static unsigned long Trace_QueueGet_Time_Elapse(unsigned long Reference_Time)
  * *************************************************************************/
 static void Process_BackGround_Debug_Trace(void)
 {
+#if (Enable_Error_Reporting == Config_ON)
+  /* Local variable to store the Time out error message.*/
+  BufferAddType Local_TimeOut_Cnt = 0;
+  BufferAddType Local_Overflow_Cnt = 0;
+#endif /* End of (Enable_Error_Reporting == Config_ON)*/
 
+/* Variable to get the Queue to be processed.*/
+BufferAddType LoopIndex;
+BufferAddType CurrentQueueToBeProcessed;
+/* Variable to check if queue in end point also checked, If so on Next Iteration needs to exit the loop*/
+unsigned char EndQueue_Checked;
 
+/* Check if error reporting is enabled, of So get the information.*/
+#if (Enable_Error_Reporting == Config_ON)
+  /* Enter in to Critical Section*/
+  portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
 
+  /* Get data lost count.*/
+  Local_Overflow_Cnt = Total_Buffer_Data_lost;
+  /* Clear data lost count.*/
+  Total_Buffer_Data_lost = 0;
 
+  /* Get Time count.*/
+  Local_TimeOut_Cnt = Queue_TimeOut_Detected;
+  /* Clear data lost count.*/
+  Queue_TimeOut_Detected = 0;
+
+  /* Exit from Critical Section. */
+  portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
+
+  /* Check if Timeout error present.*/
+  if (Local_TimeOut_Cnt != 0)
+  {
+
+    Serial.write("!![Failter Error], Queue Timeout detected for ");
+    Serial.write(Local_TimeOut_Cnt);
+    Serial.println(" Times..");
+  }
+
+  /* Check if Timeout error present.*/
+  if (Local_Overflow_Cnt != 0)
+  {
+
+    Serial.write("!![Failter Error], Queue Overfloe, So New data not considered for ");
+    Serial.write(Local_Overflow_Cnt);
+    Serial.println(" Times..");
+  }
+
+#endif /* End of (Enable_Error_Reporting == Config_ON)*/
+
+/* Set a init value to local variable */
+ CurrentQueueToBeProcessed = Invalid_Queue_Index;
+/* Clear end point detection*/
+  EndQueue_Checked = false;
+
+ /* Enter in to Critical Section*/
+ portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
+ /* Loop and Identify the Queue to be processed in this cycle.*/
+ for (LoopIndex = BackGround_Queue_Start_Pointer; LoopIndex != Invalid_Queue_Index; /* Increment shall be cyclic, So handled saperately*/ )
+ {
+    /* Check if the Queue is ready to print*/
+    if((BackGround_Queue[LoopIndex].Queue_Status == BackGround_Queue_New) || 
+       (BackGround_Queue[LoopIndex].Queue_Status == BackGround_Queue_PrintInProgress) )
+       {
+         /* Set this as Queue to be processed.*/
+         CurrentQueueToBeProcessed = LoopIndex;
+
+         /* State status indicating that Printing is in progress.*/
+         BackGround_Queue[CurrentQueueToBeProcessed].Queue_Status = BackGround_Queue_PrintInProgress;
+
+         /* Exit the loop*/
+         LoopIndex = Invalid_Queue_Index;
+       }
+
+       /* Increment Loop index, id still did not found any.*/
+       if (LoopIndex != Invalid_Queue_Index)
+       {
+         /* Increment the Index. */
+         LoopIndex++;
+
+         /* Check wheather its time to make it cyclic. */
+         if (LoopIndex >= Max_BackGround_Buffer_Queue)
+         {
+           /* Reset the Index from start*/
+           LoopIndex = 0;
+         }
+
+         /* Judgement for End Queue also checked.*/
+         /* If end point already detected, Exit this time.*/
+         if (EndQueue_Checked == true)
+         {
+           /* Exit this for loop*/
+           LoopIndex = Invalid_Queue_Index;
+         }
+         /* If current queue is matching with the end budder*/
+         else if (LoopIndex == BackGround_Queue_End_Pointer)
+         {
+           /* Allow to go for one more iteration.*/
+           EndQueue_Checked = true;
+         }
+         else
+         {
+           /* Do Nothing. */
+         }
+       }/* Emd of if (LoopIndex != Invalid_Queue_Index)*/
+ }
+ /* Exit from Critical Section. */
+ portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
+
+ /* Check if the Queue is available for printing*/
+ if (CurrentQueueToBeProcessed != Invalid_Queue_Index)
+ {
+   /*Initate the printing of the buffer*/
+   (void)Serial.write((char *)(&BackGround_Buffer[BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd]));
+
+   /* Check of buffer is on edge*/
+   if ((BackGround_Queue[CurrentQueueToBeProcessed].BUfferSize + BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd) >= Max_BackGround_Buffer_Reserved)
+   {
+     /*Initate transmutation of remaining buffer*/
+     (void)Serial.write((char *)(BackGround_Buffer));
+   }
+   
+   /* Print New line*/
+   (void)Serial.write("\n");
+
+ }
 }
 
 /* ************************************************************************
@@ -470,7 +592,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
             if (EndQueue_Checked == true)
             {
               /* Exit this for loop*/
-              Local_Loop_Index = Max_BackGround_Buffer_Queue;
+              Local_Loop_Index = Invalid_Queue_Index;
             }
             /* If current queue is matching with the end budder*/
             else if (Local_Loop_Index == BackGround_Queue_End_Pointer)

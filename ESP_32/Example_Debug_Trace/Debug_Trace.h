@@ -79,6 +79,12 @@ version:- V1.0.1
   */
 #define Enable_Background_WaitForBuffer Config_ON
 
+/* This Macro is to Enable or dissable the printing of error message like timeout or Data lost because of Queue overflow.
+     Config_ON   => Shall print error message.
+     Config_OFF  => Shall not print error mesage.
+*/
+#define Enable_Error_Reporting Config_ON
+
 
 /*Reserve Max debug variable sizes as 1KB.*/
 #define Max_Debug_Buffer 1024
