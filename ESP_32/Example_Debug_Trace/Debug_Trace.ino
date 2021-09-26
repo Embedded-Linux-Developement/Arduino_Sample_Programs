@@ -47,11 +47,11 @@ version:- V1.0.1
 
 /* Following different states of a buffer Queue based on the processing.*/
 enum  BackGround_Queue_Status{
-  BackGround_Queue_FillInProgres      = F2,    /* Its a state where Queue filling is in progress and or started. */
-  BackGround_Queue_New                = 20,    /* Its a state where Queue is just updated */
-  BackGround_Queue_PrintInProgress    = 22,    /* Its a state where buffer in Queue printing is in-progress.*/
-  BackGround_Queue_PrintCompleted     = 44,    /* Its a state where where buffer printing is completed, And can reuse again..*/
-  BackGround_Queue_Empty              = 88,    /* Its a state where Queue is empty and ready to take new assignment.*/
+  BackGround_Queue_FillInProgres      = 0x92,    /* Its a state where Queue filling is in progress and or started. */
+  BackGround_Queue_New                = 0x20,    /* Its a state where Queue is just updated */
+  BackGround_Queue_PrintInProgress    = 0x22,    /* Its a state where buffer in Queue printing is in-progress.*/
+  BackGround_Queue_PrintCompleted     = 0x44,    /* Its a state where where buffer printing is completed, And can reuse again..*/
+  BackGround_Queue_Empty              = 0x88,    /* Its a state where Queue is empty and ready to take new assignment.*/
 };
 
 /* Data type to define the data type used for pointing buffer Address*/
@@ -65,7 +65,7 @@ typedef struct BackGround_Queue_Table_Tag {
    BufferAddType               BUfferSize;                   /* Represent the sizes of the buffer including \0. and can have maximum size of "Max_Debug_Buffer" */
    BackGround_Queue_Status     Queue_Status;                 /* Represent status if the Queue. */   
   /* Check if Queue is supported.*/ 
-#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == True) )
+#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON) )
    unsigned long               Queue_Processing_Start_Time;  /* Represent the time at which "BackGround_Queue_FillInProgres" state is changes, Can use to applat timeout id required.*/   
 #endif
 
@@ -84,7 +84,7 @@ typedef struct BackGround_Queue_Table_Tag {
 static char buffer[Max_Debug_Buffer];
 static char Timming_Buffer[Max_Debug_Time_Buffer];
 
-#if (Enable_Background_Print_Support == True)
+#if (Enable_Background_Print_Support == Config_ON)
 
 /* Reserve the Buffer for of the Backup. Additional 2 byte for terminatation in case of segmented cyclic buffer loop.*/
 static char BackGround_Buffer[Max_BackGround_Buffer_Reserved + 2];
@@ -121,22 +121,22 @@ TaskHandle_t BackGround_Debug_Trace_Task_Handle;
 BufferAddType Queue_TimeOut_Detected;
 #endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
 
-#endif /* End of Enable_Background_Print_Support == True*/
+#endif /* End of Enable_Background_Print_Support == Config_ON*/
 
 /*******************************************************************************
  *  Functions Extern deceleration
 *******************************************************************************/
 /* If back ground debug is Enabled.*/
-#if (Enable_Background_Print_Support == True)
+#if (Enable_Background_Print_Support == Config_ON)
 
-static void BackGround_Debug_Trace_Task( void * pvParameters );
+extern void BackGround_Debug_Trace_Task( void * pvParameters );
 
 static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBufferSizes);
 static void Report_Buffer_Data_Lost(void);
 
 static unsigned long Trace_QueueGet_Time_Elapse(unsigned long Reference_Time);
 
-#endif /* End of Enable_Background_Print_Support == True*/
+#endif /* End of Enable_Background_Print_Support == Config_ON*/
 
 /*******************************************************************************
  *  Class Objects.
@@ -150,7 +150,7 @@ static unsigned long Trace_QueueGet_Time_Elapse(unsigned long Reference_Time);
 ==========================================================================
 
 /* If back ground debug is Enabled.*/
-#if (Enable_Background_Print_Support == True)
+#if (Enable_Background_Print_Support == Config_ON)
 
 
 /* ************************************************************************
@@ -158,7 +158,7 @@ static unsigned long Trace_QueueGet_Time_Elapse(unsigned long Reference_Time);
  *    Shall consider over flow case also.
  * ************************************************************************
  * */
-unsigned long Trace_QueueGet_Time_Elapse(unsigned long Reference_Time)
+static unsigned long Trace_QueueGet_Time_Elapse(unsigned long Reference_Time)
 {
   /* Variable to store the difference in time.*/
   unsigned long Delta_Time = 0;
@@ -230,12 +230,12 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
   unsigned char EndQueue_Checked;
 
   /* Check if any Queue is readely available, else waite until same is available.*/
-#if (Enable_Background_WaitForBuffer == True) /* If needs to waite.*/
+#if (Enable_Background_WaitForBuffer == Config_ON) /* If needs to waite.*/
 
   /* If queue is already select, Do not enter this loop again, on next iteration onwards.*/
   while (Return_Queue_Index == Invalid_Queue_Index)
   {
-#endif /* End of Enable_Background_WaitForBuffer == True */
+#endif /* End of Enable_Background_WaitForBuffer == Config_ON */
 
     /* Enter in to Critical Section*/
     portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
@@ -254,12 +254,12 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
       BackGround_Queue[Return_Queue_Index].BUfferStartAdd = 0;
 
       /* Check wheather time out is Supported, If Yes update requested time.*/
-#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == True))
+#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON))
 
       /* Store the time at which we reserved the Queue.*/
       BackGround_Queue[Return_Queue_Index].Queue_Processing_Start_Time = millis();
 
-#endif /* End of ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == True) )*/
+#endif /* End of ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON) )*/
 
       /* Increment Queue for Next Cycle.*/
       BackGround_Queue_End_Pointer++;
@@ -288,7 +288,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
     {
 
       /* Check wheather time out is Supported, If Yes check for time out and take necessary action.*/
-#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == True))
+#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON))
 
       /* Check wheather timeout time elapsed, If so Change the state of the Queue, Such that on next cycle it shall be consumed.*/
       if (Trace_QueueGet_Time_Elapse(BackGround_Queue[BackGround_Queue_End_Pointer].Queue_Processing_Start_Time) > BackGround_Debug_Trace_TimeOut)
@@ -308,13 +308,13 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
       {
         /* Do nothing.*/
       }
-#endif /* End of ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == True) )*/
+#endif /* End of ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON) )*/
     }
 
     /* Exit from Critical Section. */
     portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
 
-#if (Enable_Background_WaitForBuffer == True) /* If needs to waite.*/
+#if (Enable_Background_WaitForBuffer == Config_ON) /* If needs to waite.*/
 
     /* Add delay equivelent to processing task period for Background task.*/
     /*If still Queue did not found */
@@ -326,7 +326,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
 
   } /* End of while (Return_Queue_Index == Invalid_Queue_Index) */
 
-#endif /* End of Enable_Background_WaitForBuffer == True */
+#endif /* End of Enable_Background_WaitForBuffer == Config_ON */
 
 /*---------------------------------------------------------------------------------------
                End if Queue Searching and Start of Buffer searching
@@ -342,13 +342,13 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
     BackGround_Queue[Return_Queue_Index].BUfferSize = 0;
 
     /* Check if required amound of buffer is available, else waite until same is available. Based on the configuration*/
-#if (Enable_Background_WaitForBuffer == True) /* If needs to waite.*/
+#if (Enable_Background_WaitForBuffer == Config_ON) /* If needs to waite.*/
     do
     {
-#endif /* End of Enable_Background_WaitForBuffer == True */
+#endif /* End of Enable_Background_WaitForBuffer == Config_ON */
 
       /* Clear end point detection*/
-      EndQueue_Checked = False;
+      EndQueue_Checked = false;
 
       /* Enter in to Critical Section*/
       portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
@@ -413,7 +413,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
           {
 
             /* Check wheather time out is Supported, If Yes check for time out and take necessary action.*/
-#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == True))
+#if ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON))
 
             /* Check wheather timeout time elapsed, If so Change the state of the Queue, Such that on next cycle it shall be consumed.*/
             if (Trace_QueueGet_Time_Elapse(BackGround_Queue[Local_Loop_Index].Queue_Processing_Start_Time) > BackGround_Debug_Trace_TimeOut)
@@ -448,7 +448,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
             /* Terminate current loop as there was no processable open queue is available.*/
             Local_Loop_Index = Invalid_Queue_Index;
 
-#endif /* End of ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == True) )*/
+#endif /* End of ((BackGround_Debug_Trace_TimeOut > 0) && (Enable_Background_WaitForBuffer == Config_ON) )*/
 
           } /* End of else for if to check Queue is empty.*/
 
@@ -467,7 +467,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
             }
             /* Judgement for End Queue also checked.*/
             /* If end point already detected, Exit this time.*/
-            if (EndQueue_Checked == True)
+            if (EndQueue_Checked == true)
             {
               /* Exit this for loop*/
               Local_Loop_Index = Max_BackGround_Buffer_Queue;
@@ -475,7 +475,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
             /* If current queue is matching with the end budder*/
             else if (Local_Loop_Index == BackGround_Queue_End_Pointer)
             {
-              EndQueue_Checked = True;
+              EndQueue_Checked = true;
             }
             else
             {
@@ -489,7 +489,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
       /* Exit from Critical Section. */
       portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
 
-#if (Enable_Background_WaitForBuffer == True) /* If needs to waite.*/
+#if (Enable_Background_WaitForBuffer == Config_ON) /* If needs to waite.*/
 
       /* Add delay equivelent to processing task period for Background task.*/
       /* If still enough buffer is not availabe. */
@@ -500,7 +500,7 @@ static BufferAddType Accrue_Required_BackgroundQueue(BufferAddType RequiredBuffe
       }
 
     } while (RequiredBufferSizes != BackGround_Queue[Return_Queue_Index].BUfferSize);
-#endif /* End of Enable_Background_WaitForBuffer == True */
+#endif /* End of Enable_Background_WaitForBuffer == Config_ON */
 
     /* Check if Possible to get the required buffer, else release the Queue.*/
     if (RequiredBufferSizes != BackGround_Queue[Return_Queue_Index].BUfferSize)
@@ -570,7 +570,7 @@ void BackGround_Debug_Trace_Task(void *pvParameters)
 
 
 
-#endif /* End of Enable_Background_Print_Support == True*/
+#endif /* End of Enable_Background_Print_Support == Config_ON*/
 
 /*
 ===========================================================================
@@ -586,7 +586,7 @@ void BackGround_Debug_Trace_Task(void *pvParameters)
  * */
 void Init_Trace(void)
 {
-#if ((Enable_Debug_Support == True) && (Enable_Background_Print_Support == True))
+#if ((Enable_Debug_Support == Config_ON) && (Enable_Background_Print_Support == Config_ON))
   unsigned short Index;
 
 #endif
@@ -595,11 +595,11 @@ void Init_Trace(void)
   Trace_Function_Call();
 
   /* Do operation only if debug support is ON*/
-#if (Enable_Debug_Support == True)
+#if (Enable_Debug_Support == Config_ON)
   /* Start the Serial Port*/
   Serial.begin(Serial_BR_Rate);
 
-#if (Enable_Background_Print_Support == True)
+#if (Enable_Background_Print_Support == Config_ON)
 
   /* Enter in to Critical Section*/
   portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
@@ -607,9 +607,9 @@ void Init_Trace(void)
   /* Init the Queue Table*/
   for (Index = 0; Index < Max_BackGround_Buffer_Queue; Index++)
   {
-    BackGround_Queue.BUfferStartAdd = 0;
-    BackGround_Queue.BUfferSize = 0;
-    BackGround_Queue->Queue_Status = BackGround_Queue_Empty;
+    BackGround_Queue[Index].BUfferStartAdd = 0;
+    BackGround_Queue[Index].BUfferSize = 0;
+    BackGround_Queue[Index].Queue_Status = BackGround_Queue_Empty;
 
     /* Check wheather time out is Supported.*/
 #if (BackGround_Debug_Trace_TimeOut > 0) 
@@ -649,9 +649,9 @@ Queue_TimeOut_Detected = 0;
 
 
 
-#endif /* End of Enable_Background_Print_Support == True*/
+#endif /* End of Enable_Background_Print_Support == Config_ON*/
 
-#endif /* End of (Enable_Debug_Support == True)*/
+#endif /* End of (Enable_Debug_Support == Config_ON)*/
 }
 
 
@@ -666,12 +666,12 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
   Debug_Trace_FunStdRet_Type ReturnValue = Debug_Trace_OK;
 
   /* Do operation only if debug support is ON*/
-#if (Enable_Debug_Support == True)
+#if (Enable_Debug_Support == Config_ON)
   int Ret_Var;
   va_list args;
 
 /* If back ground debug is Enabled.*/
-#if (Enable_Background_Print_Support == True)
+#if (Enable_Background_Print_Support == Config_ON)
   BufferAddType TotalString_Len;
   BufferAddType CurrentQueue_Index;
 
@@ -681,7 +681,7 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
   /* store the starting address .*/
   BufferAddType AllocatedBufferStart_Addres;
 
-#endif /* End of Enable_Background_Print_Support == True*/
+#endif /* End of Enable_Background_Print_Support == Config_ON*/
 
   va_start(args, fmt);
   Ret_Var = vsnprintf(buffer, sizeof(buffer), fmt, args);
@@ -700,7 +700,7 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
   }
 
 /* If back ground debug is Enabled.*/
-#if (Enable_Background_Print_Support == True)
+#if (Enable_Background_Print_Support == Config_ON)
 
   /* Calculate total memory required for the buffering*/
   TotalString_Len = strlen(Timming_Buffer) + strlen(buffer) + 1;
@@ -809,9 +809,9 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
 
   Serial.write("\n");
 
-#endif /* End of Enable_Background_Print_Support == True*/
+#endif /* End of Enable_Background_Print_Support == Config_ON*/
 
-#endif /* End of (Enable_Debug_Support == True)*/
+#endif /* End of (Enable_Debug_Support == Config_ON)*/
 
   /* Return the return value.*/
   return (ReturnValue);

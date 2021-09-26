@@ -36,7 +36,15 @@ version:- V1.0.1
 #define Debug_Trace_H
 
 
+/* Define Config_ON*/
+#ifndef Config_ON
+#define Config_ON 0X55
+#endif
 
+/* Define Config_OFF*/
+#ifndef Config_OFF
+#define Config_OFF 0XAA
+#endif
 
 
 /*******************************************************************************
@@ -46,30 +54,30 @@ version:- V1.0.1
 #define Serial_BR_Rate 115200 /*serial communication at 9600 bits per second*/
 
 /* Macro to enable or disable debug support,
-     True   => Will print debug info over serial terminal.
-     False  => Shall Not print debug info over serial terminal.
+     Config_ON   => Will print debug info over serial terminal.
+     Config_OFF  => Shall Not print debug info over serial terminal.
   */
-#define Enable_Debug_Support True
+#define Enable_Debug_Support Config_ON
 
 /* Macro to enable or disable tracing of the function calls,
-     True   => Shall Print the function , file and line number from where the Macro Function "Trace_Function_Call()" is being called.
-     False  => Shall Dissable the Macro Function "Trace_Function_Call()" calls.
+     Config_ON   => Shall Print the function , file and line number from where the Macro Function "Trace_Function_Call()" is being called.
+     Config_OFF  => Shall Dissable the Macro Function "Trace_Function_Call()" calls.
   */
-#define Enable_Debug_Trace_Function_Calls False
+#define Enable_Debug_Trace_Function_Calls Config_OFF
 
 
 /* Macro to enable or disable Background printing, It helps to keep on print in background in NON blocking phasen 
-     True   => Shall support Background printing, in a low priority task.
-     False  => Background printing shall be dissabled and shall print in Blocking phasen.
+     Config_ON   => Shall support Background printing, in a low priority task.
+     Config_OFF  => Background printing shall be dissabled and shall print in Blocking phasen.
   */
-#define Enable_Background_Print_Support True
+#define Enable_Background_Print_Support Config_ON
 
 
 /* Macro to enable or disable Holding / wait until required buffer or Background queue is free. else shall Ignore new request. 
-     True   => The processing shall wait until required number of Buffer or Queue is get freed. 
-     False  => If enough buffer or Queue is not available, Then shall Ignore latest request and through error, Indicating New Trace Data lost.
+     Config_ON   => The processing shall wait until required number of Buffer or Queue is get freed. 
+     Config_OFF  => If enough buffer or Queue is not available, Then shall Ignore latest request and through error, Indicating New Trace Data lost.
   */
-#define Enable_Background_WaitForBuffer True
+#define Enable_Background_WaitForBuffer Config_ON
 
 
 /*Reserve Max debug variable sizes as 1KB.*/
@@ -88,14 +96,14 @@ version:- V1.0.1
 
 /* To Define the waiting delay after unsuccessful attempt, 
    Can consider the smallest intervall befor checking again wheather any Queue is get freed.. 
-   This time shall option shall applicable only when Enable_Background_WaitForBuffer = True.
+   This time shall option shall applicable only when Enable_Background_WaitForBuffer = Config_ON.
  */
 #define BackGround_Each_cycleWaittingDelay 30 
 
 /* To Define the Queue timeout, Use for cancell or ignore the Queue once timeout is detected. 
      If cannot complete the printing withen mentioned time then Queue content shall be ignored, Only id there is NO free buffer or Queue available. 
     unit in ms
-    Support only when Enable_Background_WaitForBuffer = True
+    Support only when Enable_Background_WaitForBuffer = Config_ON
     0 ==> Indicate No support for timeout.
     2000 ==> Indicate 2sec / 2000ms Time out if Free Buffer or Queue is not available.*/
 #define BackGround_Debug_Trace_TimeOut  30000
@@ -119,17 +127,17 @@ enum  Debug_Trace_FunStdRet_Type{
 *******************************************************************************/
 
 /* If function call tracing is enabled,*/
-#if (Enable_Debug_Trace_Function_Calls == True)
+#if (Enable_Debug_Trace_Function_Calls == Config_ON)
 /* Print debug informatations*/
 //#define Trace_Function_Call() Debug_Trace("Call Sequence:- In Function %-40s  , @ Line Number %04d , in file %s .", __func__,__LINE__,__FILE__)
 /* One without file name*/
 #define Trace_Function_Call() Debug_Trace("Call Sequence:- In Function %-40s  , @ Line Number %04d", __func__,__LINE__)
 
-#else /* if (Enable_Debug_Trace_Function_Calls == STD_OFF)*/
+#else /* if (Enable_Debug_Trace_Function_Calls == Config_OFF)*/
 /* Do nothing, as same is dissabled.*/
 #define Trace_Function_Call() 
 
-#endif /* End of (Enable_Debug_Trace_Function_Calls == STD_ON)*/
+#endif /* End of (Enable_Debug_Trace_Function_Calls == Config_OFF)*/
 
 
 /*******************************************************************************
