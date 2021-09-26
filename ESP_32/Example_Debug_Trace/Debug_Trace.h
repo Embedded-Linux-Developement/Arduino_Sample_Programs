@@ -86,9 +86,11 @@ version:- V1.0.1
 #define Enable_Error_Reporting Config_ON
 
 
-/*Reserve Max debug variable sizes as 1KB.*/
+/*Reserve Max debug variable sizes as 1KB.
+  If request more than Max_Debug_Buffer when Enable_Background_Print_Support Config_ON, then shall ignore rest of the string.
+      It shall also consider including memory required to store time Info.*/
 #define Max_Debug_Buffer 1024
-#define Max_Debug_Time_Buffer 128
+
 
 
 /* Macro for define the Max buffer reserved for */

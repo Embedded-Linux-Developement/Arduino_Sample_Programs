@@ -76,6 +76,9 @@ typedef struct BackGround_Queue_Table_Tag {
 *******************************************************************************/
 #define Invalid_Queue_Index (Max_BackGround_Buffer_Queue + 1)
 
+/* Memory required or storing the Time stamp info, Please do not change same its not configurable, 
+    if doing so please make sure to update the code accordingly.*/
+#define Max_Debug_Time_Buffer 128
 
 /*******************************************************************************
  *  Variables and Constense
@@ -226,7 +229,7 @@ unsigned char EndQueue_Checked;
   {
 
     Serial.write("!![Failter Error], Queue Timeout detected for ");
-    Serial.write(Local_TimeOut_Cnt);
+    Serial.print(Local_TimeOut_Cnt);
     Serial.println(" Times..");
   }
 
@@ -235,7 +238,7 @@ unsigned char EndQueue_Checked;
   {
 
     Serial.write("!![Failter Error], Queue Overfloe, So New data not considered for ");
-    Serial.write(Local_Overflow_Cnt);
+    Serial.print(Local_Overflow_Cnt);
     Serial.println(" Times..");
   }
 
@@ -316,6 +319,8 @@ unsigned char EndQueue_Checked;
    /* Print New line*/
    (void)Serial.write("\n");
 
+  /* Set the state that buffer processing is completed.*/
+   BackGround_Queue[CurrentQueueToBeProcessed].Queue_Status = BackGround_Queue_PrintCompleted;
  }
 }
 
@@ -826,6 +831,13 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
 
   /* Calculate total memory required for the buffering*/
   TotalString_Len = strlen(Timming_Buffer) + strlen(buffer) + 1;
+
+  /* If required memory grater than Max allowed, The ignore rest of the buffer.*/
+  if(TotalString_Len > Max_Debug_Buffer)
+  {
+    /* Add Upper Cap to the buffer.*/
+    TotalString_Len = Max_Debug_Buffer;
+  }
 
   /* Get Queue Index for storing the buffer.*/
   CurrentQueue_Index = Accrue_Required_BackgroundQueue(TotalString_Len);
