@@ -54,9 +54,6 @@ enum  BackGround_Queue_Status{
   BackGround_Queue_Empty              = 0x88,    /* Its a state where Queue is empty and ready to take new assignment.*/
 };
 
-/* Data type to define the data type used for pointing buffer Address*/
-typedef unsigned short BufferAddType;
-
 
 
 /* Following is the Structure to store the Queue Informatations*/
@@ -78,14 +75,18 @@ typedef struct BackGround_Queue_Table_Tag {
 
 /* Memory required or storing the Time stamp info, Please do not change same its not configurable, 
     if doing so please make sure to update the code accordingly.*/
-#define Max_Debug_Time_Buffer 128
+#define Max_Debug_Time_Buffer 25
 
 /*******************************************************************************
  *  Variables and Constense
 *******************************************************************************/
 /* Max buffer relocatated for debug info in Serial window.*/
 static char buffer[Max_Debug_Buffer];
+
+/* Check if time stamping is enabled.*/
+#if (Enable_DebugTraceTimeStamping == Config_ON)
 static char Timming_Buffer[Max_Debug_Time_Buffer];
+#endif /* End of (Enable_DebugTraceTimeStamping == Config_ON)*/
 
 #if (Enable_Background_Print_Support == Config_ON)
 
@@ -198,6 +199,10 @@ static void Process_BackGround_Debug_Trace(void)
   /* Local variable to store the Time out error message.*/
   BufferAddType Local_TimeOut_Cnt = 0;
   BufferAddType Local_Overflow_Cnt = 0;
+
+  /* Array for printing value*/
+  char TempBuffer[7];
+
 #endif /* End of (Enable_Error_Reporting == Config_ON)*/
 
 /* Variable to get the Queue to be processed.*/
@@ -228,18 +233,22 @@ unsigned char EndQueue_Checked;
   if (Local_TimeOut_Cnt != 0)
   {
 
-    Serial.write("!![Failter Error], Queue Timeout detected for ");
-    Serial.print(Local_TimeOut_Cnt);
-    Serial.println(" Times..");
+    DebugTraceSerial_Print_Interface("!![Failter Error], Queue Timeout detected for ");
+    sprintf(TempBuffer,"%04d",Local_TimeOut_Cnt);
+    DebugTraceSerial_Print_Interface(TempBuffer);
+    DebugTraceSerial_Print_Interface(" Times..");
+    DebugTraceSerial_Print_Interface(DebugTraceSerial_TerminatationCharactor);
   }
 
   /* Check if Timeout error present.*/
   if (Local_Overflow_Cnt != 0)
   {
 
-    Serial.write("!![Failter Error], Queue Overfloe, So New data not considered for ");
-    Serial.print(Local_Overflow_Cnt);
-    Serial.println(" Times..");
+    DebugTraceSerial_Print_Interface("!![Failter Error], Queue Overfloe, So New data not considered for ");
+    sprintf(TempBuffer,"%04d",Local_Overflow_Cnt);
+    DebugTraceSerial_Print_Interface(TempBuffer);
+    DebugTraceSerial_Print_Interface(" Times..");
+    DebugTraceSerial_Print_Interface(DebugTraceSerial_TerminatationCharactor);
   }
 
 #endif /* End of (Enable_Error_Reporting == Config_ON)*/
@@ -306,18 +315,21 @@ unsigned char EndQueue_Checked;
  /* Check if the Queue is available for printing*/
  if (CurrentQueueToBeProcessed != Invalid_Queue_Index)
  {
+   /* Transmit Starting character based on the configuration*/
+   (void)DebugTraceSerial_Print_Interface(DebugTraceSerial_StartCharactor);
+
    /*Initate the printing of the buffer*/
-   (void)Serial.write((char *)(&BackGround_Buffer[BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd]));
+   (void)DebugTraceSerial_Print_Interface((char *)(&BackGround_Buffer[BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd]));
 
    /* Check of buffer is on edge*/
    if ((BackGround_Queue[CurrentQueueToBeProcessed].BUfferSize + BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd) >= Max_BackGround_Buffer_Reserved)
    {
      /*Initate transmutation of remaining buffer*/
-     (void)Serial.write((char *)(BackGround_Buffer));
+     (void)DebugTraceSerial_Print_Interface((char *)(BackGround_Buffer));
    }
    
-   /* Print New line*/
-   (void)Serial.write("\n");
+   /* Print Terminatation charactor.*/
+   (void)DebugTraceSerial_Print_Interface(DebugTraceSerial_TerminatationCharactor);
 
   /* Set the state that buffer processing is completed.*/
    BackGround_Queue[CurrentQueueToBeProcessed].Queue_Status = BackGround_Queue_PrintCompleted;
@@ -729,7 +741,7 @@ void Init_Trace(void)
   /* Do operation only if debug support is ON*/
 #if (Enable_Debug_Support == Config_ON)
   /* Start the Serial Port*/
-  Serial.begin(Serial_BR_Rate);
+  DebugTraceSerial_Print_Init(Serial_BR_Rate);
 
 #if (Enable_Background_Print_Support == Config_ON)
 
@@ -818,8 +830,14 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
   va_start(args, fmt);
   Ret_Var = vsnprintf(buffer, sizeof(buffer), fmt, args);
   va_end(args);
+
+/* Check if time stamping is enabled.*/
+#if (Enable_DebugTraceTimeStamping == Config_ON)
+
   /* Get Timming related Info*/
   sprintf(Timming_Buffer, "%011ld: ", millis());
+
+#endif /* End of (Enable_DebugTraceTimeStamping == Config_ON)*/
 
   /* If error Detected in processing format*/
   if (Ret_Var < 0)
@@ -834,8 +852,19 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
 /* If back ground debug is Enabled.*/
 #if (Enable_Background_Print_Support == Config_ON)
 
+/* Check if time stamping is enabled.*/
+#if (Enable_DebugTraceTimeStamping == Config_ON)
+
   /* Calculate total memory required for the buffering*/
   TotalString_Len = strlen(Timming_Buffer) + strlen(buffer) + 1;
+
+#else /* Time stamping not supported.*/
+
+  /* Calculate total memory required for the buffering*/
+  TotalString_Len = strlen(buffer) + 1;
+
+#endif /* End of (Enable_DebugTraceTimeStamping == Config_ON)*/
+
 
   /* If required memory grater than Max allowed, The ignore rest of the buffer.*/
   if(TotalString_Len > Max_Debug_Buffer)
@@ -858,6 +887,9 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
       AllocatedBufferStart_Addres = BackGround_Queue[CurrentQueue_Index].BUfferStartAdd;
       /* Set Over all buffer index to zero*/
       OverallBufferIndex = 0;
+
+/* Check if time stamping is enabled.*/
+#if (Enable_DebugTraceTimeStamping == Config_ON)
 
       /* Get String length */
       TotalString_Len = strlen(Timming_Buffer);
@@ -883,6 +915,8 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
           /* Do nothing. */
         }
       }
+
+#endif /* End of (Enable_DebugTraceTimeStamping == Config_ON)*/
 
       /* Get String length */
       TotalString_Len = strlen(buffer);
@@ -941,12 +975,19 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
 
 /* If back ground debug is Dissabled.*/
 #else
-  /* Print Timing related inform*/
-  Serial.write(Timming_Buffer);
-  /* Print the  out to Uart Serial.*/
-  (void)Serial.write(buffer);
 
-  Serial.write("\n");
+/* Check if time stamping is enabled.*/
+#if (Enable_DebugTraceTimeStamping == Config_ON)
+
+  /* Print Timing related inform*/
+  (void)DebugTraceSerial_Print_Interface(Timming_Buffer);
+
+#endif /* End of (Enable_DebugTraceTimeStamping == Config_ON)*/
+
+  /* Print the  out to Uart Serial.*/
+  (void)DebugTraceSerial_Print_Interface(buffer);
+
+  (void)DebugTraceSerial_Print_Interface(DebugTraceSerial_TerminatationCharactor);
 
 #endif /* End of Enable_Background_Print_Support == Config_ON*/
 

@@ -86,11 +86,49 @@ version:- V1.0.1
 #define Enable_Error_Reporting Config_ON
 
 
+/* This Macro is to Enable or dissable the printing of time stamping on each request automaticaly.
+     Config_ON   => Shall enebale time stamping, shall consume upto 14 Bytes additional.
+     Config_OFF  => Shall not print time stamp along with the debug trace. Use full if planning to use transimit any other info like dedicated serial based protocol.
+*/
+#define Enable_DebugTraceTimeStamping Config_ON
+
+/* This Macro is to define the starting character / string to be transmits along with each trace buffer request, in serial output.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall not use for Buffer streaming.
+   5. It shall not affect or consumed in buffer, directly printing at last stage.
+*/
+#define DebugTraceSerial_StartCharactor ""
+
+
+/* This Macro is to define the character /strung to be used as each buffer terminatation in serial output.
+   1. By default '\n' being used, 
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall not use for Buffer streaming.
+   5. It shall not affect or consumed in buffer, directly printing at last stage.
+*/
+#define DebugTraceSerial_TerminatationCharactor "\n"
+
+/* This Macro is to define the serial interface using to print output.
+   1. By default serial is selected, 
+   2. Based on needs can select any interface to stream the processed output.
+   3. No critical section protection is applayed while doing serial printing.
+*/
+#define DebugTraceSerial_Print_Interface Serial.write
+
+/* This Macro is to define the serial interface using to initialise the serial port.
+   1. By default serial is selected, 
+   2. Based on needs can select any interface to stream the processed output.
+   3. make sure this shall inline with serial output interface.
+*/
+#define DebugTraceSerial_Print_Init Serial.begin
+
 /*Reserve Max debug variable sizes as 1KB.
   If request more than Max_Debug_Buffer when Enable_Background_Print_Support Config_ON, then shall ignore rest of the string.
       It shall also consider including memory required to store time Info.*/
 #define Max_Debug_Buffer 1024
-
 
 
 /* Macro for define the Max buffer reserved for */
@@ -116,8 +154,28 @@ version:- V1.0.1
     2000 ==> Indicate 2sec / 2000ms Time out if Free Buffer or Queue is not available.*/
 #define BackGround_Debug_Trace_TimeOut  30000
 
+
+
 /*-----------------------------------------------------------------------------
- *  Generic Utility Configuration END
+ *  Buffer streaming Configuration START
+-------------------------------------------------------------------------------*/
+/*
+Buffer streaming:- 
+    1. purpose is to puse the trace output to a comman global buffer.
+    2. In this you can Pipe output to Buffer along with Serial port
+    3. Or You can select stream only to Buffer.
+    4. Or you can select stream only to Serial port, in that case you can save memory required for streaming buffer.
+    5. In the streamed buffer can use to print log to html server.
+    6. This stack shall not reserve the buffer, User has to reserve the buffer and request for populate the buffer, each time its required.
+*/
+
+
+
+/* At present No additional configuration present.*/
+
+
+/*-----------------------------------------------------------------------------
+ *  Debug Trace and Buffer streaming Configuration END
 -------------------------------------------------------------------------------*/
 
 /*******************************************************************************
@@ -129,6 +187,9 @@ enum  Debug_Trace_FunStdRet_Type{
   Debug_Trace_OK       = 55,    /* Indicate Function processing is OK*/
   Debug_Trace_NOT_OK   = 48,    /* Indicate Function processing is NOT OK*/  
   };
+
+/* Data type to define the data type used for pointing buffer Address*/
+typedef unsigned short BufferAddType;
 
 /*******************************************************************************
  *  Macro Functions
@@ -153,13 +214,36 @@ enum  Debug_Trace_FunStdRet_Type{
 *******************************************************************************/
 
 
-/* For print debug trace.*/
-extern Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...);
-
-/*Function to Init output serial for debug purpose. */
+/* ************************************************************************
+ * Function to Init output serial for debug purpose.
+ *  1. without Init nothing shall work.
+ * ************************************************************************
+ */
 extern void Init_Trace(void);
 
+/* ************************************************************************
+ * Function to print output for debug purpose.
+ *  1. first input Argument is a string and can use format specifiers like %d, %s, %f... and so on
+ *  2. Second input argument onwards provide variable name based on the format specifiers mentioned in the first input argument.
+ *  3. Its use is excate simile to the printf() functions Standard C.
+ *  4. Here only limitation is you cannot generate final string more than "Max_Debug_Buffer" bytes mentioned in the above configuration part.
+ * ************************************************************************
+ */
+extern Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...);
 
+
+/* ************************************************************************
+ * Function to populate the buffer stream based on the current available Queues.
+ *  1. First input argument shall be the starting address of the buffer to which string shall be populated.
+ *  2. user needs to make sure it shall have enough memory to copy the requested memort size, else result in memory overflow.
+ *  3. Second argument is sizes of the required streaming buffer.
+ *  4. It shall populate latest Queue which can fit within the requested memory. 
+ *  5. Please use this function only when its required, because it will block serial printing for populate the string. 
+ *  6. Its execution  time shall depends on the buffer sizes requested and total available queue to populate.
+ *  7. If requested size if grater than "Max_BackGround_Buffer_Reserved", then shall consider only upto "Max_BackGround_Buffer_Reserved".
+ * ************************************************************************
+ */
+//extern Populate_BufferStream_FromQueue(char * InputBufferStream, BufferAddType BufferStreamSize);
 
 
 #endif /* End of  Debug_Trace_H */
