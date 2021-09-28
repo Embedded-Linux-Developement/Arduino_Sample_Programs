@@ -82,6 +82,7 @@ version:- V1.0.1
 /* This Macro is to Enable or dissable the printing of error message like timeout or Data lost because of Queue overflow.
      Config_ON   => Shall print error message.
      Config_OFF  => Shall not print error mesage.
+     1. Only printing of erro shall be dissabled, Bur stack will still log error in its internal variables and do required process to overcome if possible.
 */
 #define Enable_Error_Reporting Config_ON
 
@@ -97,7 +98,8 @@ version:- V1.0.1
    2. you can use any string also.
    3. Please make sure same should be within single / double quote 
    4. It shall not use for Buffer streaming.
-   5. It shall not affect or consumed in buffer, directly printing at last stage.
+   5. It shall not use for Error reporting printing.
+   6. It shall not affect or consumed in buffer, directly printing at last stage.
 */
 #define DebugTraceSerial_StartCharactor ""
 
@@ -107,9 +109,41 @@ version:- V1.0.1
    2. you can use any string also.
    3. Please make sure same should be within single / double quote 
    4. It shall not use for Buffer streaming.
-   5. It shall not affect or consumed in buffer, directly printing at last stage.
+   5. It shall not use for Error reporting printing.
+   6. It shall not affect or consumed in buffer, directly printing at last stage.
 */
 #define DebugTraceSerial_TerminatationCharactor "\n"
+
+/* This Macro is to define the starting character / string to be transmits along with each Error messages, in serial output.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall used for Buffer streaming, If enabled option to include latest error Trace (Enable_IncludeLatestErrorTrace = Config_ON).
+   5. It shall not use for Error reporting printing.
+   6. It shall not affect or consumed in buffer, directly printing at last stage.
+   7. Please do not add more than 15 Character, It may cause buffer overrun in current implementation.
+   8. You can add more than 15 characters in such a way 
+       total No of characters in (ErrorTraceSerial_StartCharactor + ErrorTraceSerial_TerminatationCharactor) <= 30 characters.
+   9. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
+*/
+#define ErrorTraceSerial_StartCharactor ""
+
+
+/* This Macro is to define the character /strung to be used as each buffer terminatation in serial output.
+   1. By default '\n' being used, 
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall used for Buffer streaming, If enabled option to include latest error Trace (Enable_IncludeLatestErrorTrace = Config_ON).
+   5. It shall not use for Error reporting printing.
+   6. It shall not affect or consumed in buffer, directly printing at last stage.
+   7. Please do not add more than 15 Character, It may cause buffer overrun in current implementation.
+   8. You can add more than 15 characters in such a way 
+       total No of characters in (ErrorTraceSerial_StartCharactor + ErrorTraceSerial_TerminatationCharactor) <= 30 characters.
+   9. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
+*/
+#define ErrorTraceSerial_TerminatationCharactor "\n"
+
+
 
 /* This Macro is to define the serial interface using to print output.
    1. By default serial is selected, 
@@ -150,8 +184,8 @@ version:- V1.0.1
      If cannot complete the printing withen mentioned time then Queue content shall be ignored, Only id there is NO free buffer or Queue available. 
     unit in ms
     Support only when Enable_Background_WaitForBuffer = Config_ON
-    0 ==> Indicate No support for timeout.
-    2000 ==> Indicate 2sec / 2000ms Time out if Free Buffer or Queue is not available.*/
+      For Example:-  0    ==> Indicate No support for timeout.
+      For Example:-  2000 ==> Indicate 2sec / 2000ms Time out if Free Buffer or Queue is not available.*/
 #define BackGround_Debug_Trace_TimeOut  30000
 
 
@@ -170,9 +204,44 @@ Buffer streaming:-
 */
 
 
+/* This Macro is to Enable or dissable the printing over serial
+     Config_ON   => Shall print over serial terminal.
+     Config_OFF  => Shall not print over serial terminal.
+                      1. This will still keep buffer and queue and do all processing,
+                      2. Only point is shall not out vis serial out
+                      3. Can useful if you did not want to print serila and just needs to extract buffer stream to publish.
+                      4. Will increase the performance becaus not no needs to wait till previous buffers flushes uart. 
+                      5. Shall also dissable printing of Error handling report for Queue timeout and Queue data lost.
+*/
+#define Enable_DebugTrace_Via_SerialPort Config_ON
 
-/* At present No additional configuration present.*/
 
+/* This Macro is to Enable or dissable including of latest error trace in to the final buffer.
+     Config_ON   => Shall include the error trace in final buffer output.
+     Config_OFF  => Shall not include the error trace in final buffer output.
+*/
+#define Enable_IncludeLatestErrorTrace Config_ON
+
+/* This Macro is to define the starting character / string to be transmits along with each trace buffer request, in populated buffer stream.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall not use for Serial output.
+   5. It shall affect or consumed size in buffer.
+   6. It shall be helpfull to add html tags, as per the design.
+*/
+#define DebugBufferStream_StartCharactor ""
+
+
+/* This Macro is to define the character /strung to be used as each buffer terminatation in populated buffer stream.
+   1. By default '\n' being used, 
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall not use for Serial output.
+   5. It shall affect or consumed size in buffer.
+   6. It shall be helpfull to add html tags, as per the design.
+*/
+#define DebugBufferStream_TerminatationCharactor "\n"
 
 /*-----------------------------------------------------------------------------
  *  Debug Trace and Buffer streaming Configuration END
@@ -234,16 +303,16 @@ extern Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...);
 
 /* ************************************************************************
  * Function to populate the buffer stream based on the current available Queues.
- *  1. First input argument shall be the starting address of the buffer to which string shall be populated.
+ *  1. * InputBufferStream => First input argument shall be the starting address of the buffer to which string shall be populated.
  *  2. user needs to make sure it shall have enough memory to copy the requested memort size, else result in memory overflow.
- *  3. Second argument is sizes of the required streaming buffer.
+ *  3. BufferStreamSize => Second argument is sizes of the required streaming buffer.
  *  4. It shall populate latest Queue which can fit within the requested memory. 
  *  5. Please use this function only when its required, because it will block serial printing for populate the string. 
  *  6. Its execution  time shall depends on the buffer sizes requested and total available queue to populate.
  *  7. If requested size if grater than "Max_BackGround_Buffer_Reserved", then shall consider only upto "Max_BackGround_Buffer_Reserved".
  * ************************************************************************
  */
-//extern Populate_BufferStream_FromQueue(char * InputBufferStream, BufferAddType BufferStreamSize);
+extern void Populate_BufferStream_FromQueue(char * InputBufferStream, BufferAddType BufferStreamSize);
 
 
 #endif /* End of  Debug_Trace_H */

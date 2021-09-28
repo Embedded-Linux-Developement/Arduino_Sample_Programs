@@ -77,6 +77,12 @@ typedef struct BackGround_Queue_Table_Tag {
     if doing so please make sure to update the code accordingly.*/
 #define Max_Debug_Time_Buffer 25
 
+/* Memory required or storing time out error string for further processing,*/
+#define TimeOutError_Storage_Buffer_Sizes 103
+
+/* Memory required or storing Overrun / Data lost error string for further processing,*/
+#define OverRunError_Storage_Buffer_Sizes 104
+
 /*******************************************************************************
  *  Variables and Constense
 *******************************************************************************/
@@ -94,6 +100,22 @@ static char Timming_Buffer[Max_Debug_Time_Buffer];
 static char BackGround_Buffer[Max_BackGround_Buffer_Reserved + 2];
 /* Queue Table for store the Queue status.*/
 BackGround_Queue_Table_Type BackGround_Queue[Max_BackGround_Buffer_Queue];
+
+/* If additional bufferis required*/
+#if ( (Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))
+
+  /* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0) 
+
+/* Global buffer for storting timeout error*/
+static char TimeOutError_Storage_Buffer[TimeOutError_Storage_Buffer_Sizes];
+
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
+
+/* Global buffer for storting Overrun or datalost error*/
+static char OverRunError_Storage_Buffer[OverRunError_Storage_Buffer_Sizes];
+
+#endif /* End of ( (Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))*/
 
 /* Variable to indicate the starting point of the buffer.*/
 BufferAddType  BackGround_Queue_Start_Pointer;
@@ -197,8 +219,14 @@ static void Process_BackGround_Debug_Trace(void)
 {
 #if (Enable_Error_Reporting == Config_ON)
   /* Local variable to store the Time out error message.*/
+/* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0) 
   BufferAddType Local_TimeOut_Cnt = 0;
-  BufferAddType Local_Overflow_Cnt = 0;
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
+
+BufferAddType Local_Overflow_Cnt = 0;
+
+
 
   /* Array for printing value*/
   char TempBuffer[7];
@@ -221,35 +249,99 @@ unsigned char EndQueue_Checked;
   /* Clear data lost count.*/
   Total_Buffer_Data_lost = 0;
 
+  /* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0) 
+
   /* Get Time count.*/
   Local_TimeOut_Cnt = Queue_TimeOut_Detected;
   /* Clear data lost count.*/
   Queue_TimeOut_Detected = 0;
 
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
+
+/* If Error required to be stored in a buffer*/
+#if (Enable_IncludeLatestErrorTrace == Config_ON)
+
+  /* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0) 
+
+  /* Check if Timeout error present.*/
+  if (Local_TimeOut_Cnt != 0)
+  {
+     sprintf(TimeOutError_Storage_Buffer,"%s!![Failter Error], Queue Timeout detected for %04d Times..%s",ErrorTraceSerial_StartCharactor, Local_TimeOut_Cnt,ErrorTraceSerial_TerminatationCharactor);
+  }
+
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
+
+  /* Check if Timeout error present.*/
+  if (Local_Overflow_Cnt != 0)
+  {
+     sprintf(OverRunError_Storage_Buffer,"%s!![Failter Error], Queue Overflow detected for %04d Times..%s",ErrorTraceSerial_StartCharactor, Local_Overflow_Cnt,ErrorTraceSerial_TerminatationCharactor);
+  }
+
+
+
+#endif /* End of (Enable_IncludeLatestErrorTrace == Config_ON)*/
+
+
+
   /* Exit from Critical Section. */
   portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
+
+   /* Check if serial printing is supported.*/
+#if (Enable_DebugTrace_Via_SerialPort == Config_ON)
+
+  /* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0) 
 
   /* Check if Timeout error present.*/
   if (Local_TimeOut_Cnt != 0)
   {
 
+/* If Error string is already stored in a buffer*/
+#if (Enable_IncludeLatestErrorTrace == Config_ON)
+ 
+  /* Print already populated string*/
+   DebugTraceSerial_Print_Interface(TimeOutError_Storage_Buffer);
+
+#else /* If error Not stored in any buffer.*/
+    DebugTraceSerial_Print_Interface(ErrorTraceSerial_StartCharactor);
     DebugTraceSerial_Print_Interface("!![Failter Error], Queue Timeout detected for ");
     sprintf(TempBuffer,"%04d",Local_TimeOut_Cnt);
     DebugTraceSerial_Print_Interface(TempBuffer);
     DebugTraceSerial_Print_Interface(" Times..");
-    DebugTraceSerial_Print_Interface(DebugTraceSerial_TerminatationCharactor);
+    DebugTraceSerial_Print_Interface(ErrorTraceSerial_TerminatationCharactor);
+
+#endif /* End of (Enable_IncludeLatestErrorTrace == Config_ON)*/
+
   }
+
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
 
   /* Check if Timeout error present.*/
   if (Local_Overflow_Cnt != 0)
   {
+    
+/* If Error string is already stored in a buffer*/
+#if (Enable_IncludeLatestErrorTrace == Config_ON)
+ 
+  /* Print already populated string*/
+   DebugTraceSerial_Print_Interface(OverRunError_Storage_Buffer);
 
-    DebugTraceSerial_Print_Interface("!![Failter Error], Queue Overfloe, So New data not considered for ");
+#else /* If error Not stored in any buffer.*/
+
+    DebugTraceSerial_Print_Interface(ErrorTraceSerial_StartCharactor);
+    DebugTraceSerial_Print_Interface("!![Failter Error], Queue Overflow detected for ");
     sprintf(TempBuffer,"%04d",Local_Overflow_Cnt);
     DebugTraceSerial_Print_Interface(TempBuffer);
     DebugTraceSerial_Print_Interface(" Times..");
-    DebugTraceSerial_Print_Interface(DebugTraceSerial_TerminatationCharactor);
+    DebugTraceSerial_Print_Interface(ErrorTraceSerial_TerminatationCharactor);
+
+#endif /* End of (Enable_IncludeLatestErrorTrace == Config_ON)*/
+
   }
+
+  #endif /* End of (Enable_DebugTrace_Via_SerialPort == Config_ON)*/
 
 #endif /* End of (Enable_Error_Reporting == Config_ON)*/
 
@@ -315,6 +407,10 @@ unsigned char EndQueue_Checked;
  /* Check if the Queue is available for printing*/
  if (CurrentQueueToBeProcessed != Invalid_Queue_Index)
  {
+
+   /* Check if serial printing is supported.*/
+#if (Enable_DebugTrace_Via_SerialPort == Config_ON)
+
    /* Transmit Starting character based on the configuration*/
    (void)DebugTraceSerial_Print_Interface(DebugTraceSerial_StartCharactor);
 
@@ -327,12 +423,19 @@ unsigned char EndQueue_Checked;
      /*Initate transmutation of remaining buffer*/
      (void)DebugTraceSerial_Print_Interface((char *)(BackGround_Buffer));
    }
-   
+
    /* Print Terminatation charactor.*/
    (void)DebugTraceSerial_Print_Interface(DebugTraceSerial_TerminatationCharactor);
 
-  /* Set the state that buffer processing is completed.*/
+   /* Enter in to Critical Section*/
+   portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
+
+   /* Set the state that buffer processing is completed.*/
    BackGround_Queue[CurrentQueueToBeProcessed].Queue_Status = BackGround_Queue_PrintCompleted;
+
+   /* Exit from Critical Section. */
+   portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
+#endif /* End of (Enable_DebugTrace_Via_SerialPort == Config_ON)*/
  }
 }
 
@@ -740,8 +843,14 @@ void Init_Trace(void)
 
   /* Do operation only if debug support is ON*/
 #if (Enable_Debug_Support == Config_ON)
+
+   /* Check if serial printing is supported.*/
+#if (Enable_DebugTrace_Via_SerialPort == Config_ON)
+
   /* Start the Serial Port*/
   DebugTraceSerial_Print_Init(Serial_BR_Rate);
+
+ #endif /* End of (Enable_DebugTrace_Via_SerialPort == Config_ON)*/
 
 #if (Enable_Background_Print_Support == Config_ON)
 
@@ -774,6 +883,22 @@ void Init_Trace(void)
 Queue_TimeOut_Detected = 0;
 
 #endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
+
+
+/* If Error required to be stored in a buffer*/
+#if (Enable_IncludeLatestErrorTrace == Config_ON)
+  /* Check if Timeout error present.*/
+  sprintf(TimeOutError_Storage_Buffer,"%sNo Queue Timeout detected Yet...%s",ErrorTraceSerial_StartCharactor, ErrorTraceSerial_TerminatationCharactor);
+
+  /* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0) 
+  sprintf(OverRunError_Storage_Buffer,"%sNo Queue Overflow detected Yet...%s",ErrorTraceSerial_StartCharactor, ErrorTraceSerial_TerminatationCharactor);
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
+
+#endif /* End of (Enable_IncludeLatestErrorTrace == Config_ON)*/
+
+
+
 
   /* Exit from Critical Section. */
   portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
@@ -996,3 +1121,39 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
   /* Return the return value.*/
   return (ReturnValue);
 }
+
+
+
+/* ************************************************************************
+ * Function to populate the buffer stream based on the current available Queues.
+ *  1. * InputBufferStream => First input argument shall be the starting address of the buffer to which string shall be populated.
+ *  2. user needs to make sure it shall have enough memory to copy the requested memort size, else result in memory overflow.
+ *  3. BufferStreamSize => Second argument is sizes of the required streaming buffer.
+ *  4. It shall populate latest Queue which can fit within the requested memory. 
+ *  5. Please use this function only when its required, because it will block serial printing for populate the string. 
+ *  6. Its execution  time shall depends on the buffer sizes requested and total available queue to populate.
+ *  7. If requested size if grater than "Max_BackGround_Buffer_Reserved", then shall consider only upto "Max_BackGround_Buffer_Reserved".
+ * ************************************************************************
+ */
+void Populate_BufferStream_FromQueue(char * InputBufferStream, BufferAddType BufferStreamSize)
+{
+   /* Local variable to loop index*/
+   BufferAddType LoopIndex;
+
+
+
+  /* Enter in to Critical Section*/
+  portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
+
+  /* Calculate */
+
+
+
+
+
+
+    /* Exit from Critical Section. */
+  portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
+
+}
+
