@@ -883,11 +883,12 @@ Queue_TimeOut_Detected = 0;
 /* If Error required to be stored in a buffer*/
 #if (Enable_IncludeLatestErrorTrace == Config_ON)
   /* Check if Timeout error present.*/
-  sprintf(TimeOutError_Storage_Buffer,"%sNo Queue Timeout detected Yet...%s",ErrorTraceSerial_StartCharactor, ErrorTraceSerial_TerminatationCharactor);
+  sprintf(OverRunError_Storage_Buffer,"%sNo Queue Overflow detected Yet...%s",ErrorTraceSerial_StartCharactor, ErrorTraceSerial_TerminatationCharactor);
+
 
   /* Check wheather time out is Supported.*/
 #if (BackGround_Debug_Trace_TimeOut > 0) 
-  sprintf(OverRunError_Storage_Buffer,"%sNo Queue Overflow detected Yet...%s",ErrorTraceSerial_StartCharactor, ErrorTraceSerial_TerminatationCharactor);
+    sprintf(TimeOutError_Storage_Buffer,"%sNo Queue Timeout detected Yet...%s",ErrorTraceSerial_StartCharactor, ErrorTraceSerial_TerminatationCharactor);
 #endif /* End of (BackGround_Debug_Trace_TimeOut > 0)  */
 
 #endif /* End of (Enable_IncludeLatestErrorTrace == Config_ON)*/
