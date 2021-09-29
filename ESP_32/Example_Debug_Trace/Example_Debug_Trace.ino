@@ -36,7 +36,7 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue/2); Loop_Index++)
 }
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(10000 / portTICK_PERIOD_MS);
 #endif
 
 
@@ -55,7 +55,7 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
 
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(15000 / portTICK_PERIOD_MS);
 #endif
 
 
@@ -73,7 +73,7 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue * 2); Loop_Index+
 }
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(15000 / portTICK_PERIOD_MS);
 #endif
 
 
@@ -91,7 +91,7 @@ for (Loop_Index = 0; Loop_Index < (20); Loop_Index++)
 }
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(15000 / portTICK_PERIOD_MS);
 #endif
 
 
@@ -109,7 +109,7 @@ for (Loop_Index = 0; Loop_Index < (17); Loop_Index++)
 }
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(15000 / portTICK_PERIOD_MS);
 #endif
 
 
@@ -130,7 +130,7 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue * 2); Loop_Index+
 }
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(15000 / portTICK_PERIOD_MS);
 #endif
 
 
@@ -150,7 +150,7 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
 }
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(15000 / portTICK_PERIOD_MS);
 #endif
 
 
@@ -180,7 +180,7 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
 }
 
 /* Flesh for flesh the output*/
-delay(10000);
+vTaskDelay(15000 / portTICK_PERIOD_MS);
 #endif
 
 
