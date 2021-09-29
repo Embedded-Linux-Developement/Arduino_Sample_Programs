@@ -62,13 +62,16 @@ version:- V1.0.1
 /* Macro to enable or disable tracing of the function calls,
      Config_ON   => Shall Print the function , file and line number from where the Macro Function "Trace_Function_Call()" is being called.
      Config_OFF  => Shall Dissable the Macro Function "Trace_Function_Call()" calls.
+     1. After Enabling this option if you use Macro function "Trace_Function_Call()" in any place,
+         Then same hall help to print function Name and line number, use to check the flow or to debug,
+     2. By dissabling / seting to Config_OFF, definatation of macro code remove, No need to remove the "Trace_Function_Call()" function  calls 
   */
 #define Enable_Debug_Trace_Function_Calls Config_OFF
 
 
 /* Macro to enable or disable Background printing, It helps to keep on print in background in NON blocking phasen 
      Config_ON   => Shall support Background printing, in a low priority task.
-     Config_OFF  => Background printing shall be dissabled and shall print in Blocking phasen.
+     Config_OFF  => Background printing shall be dissabled and shall print in forground, Like blocking function.
   */
 #define Enable_Background_Print_Support Config_ON
 

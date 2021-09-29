@@ -190,9 +190,6 @@ static unsigned long Trace_QueueGet_Time_Elapse(unsigned long Reference_Time)
   unsigned long Delta_Time = 0;
   unsigned long Current_Time = 0;
 
-  /* For tracing the the function call.*/
-  Trace_Function_Call();
-
   /*Get current time*/
   Current_Time = millis();
 
@@ -418,7 +415,7 @@ unsigned char EndQueue_Checked;
    (void)DebugTraceSerial_Print_Interface((char *)(&BackGround_Buffer[BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd]));
 
    /* Check of buffer is on edge*/
-   if ((BackGround_Queue[CurrentQueueToBeProcessed].BUfferSize + BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd) >= Max_BackGround_Buffer_Reserved)
+   if ((BackGround_Queue[CurrentQueueToBeProcessed].BUfferSize + BackGround_Queue[CurrentQueueToBeProcessed].BUfferStartAdd) > Max_BackGround_Buffer_Reserved)
    {
      /*Initate transmutation of remaining buffer*/
      (void)DebugTraceSerial_Print_Interface((char *)(BackGround_Buffer));
@@ -838,8 +835,6 @@ void Init_Trace(void)
 
 #endif
 
-  /* For tracing the the function call.*/
-  Trace_Function_Call();
 
   /* Do operation only if debug support is ON*/
 #if (Enable_Debug_Support == Config_ON)
@@ -1137,23 +1132,21 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
  */
 void Populate_BufferStream_FromQueue(char * InputBufferStream, BufferAddType BufferStreamSize)
 {
-   /* Local variable to loop index*/
-   BufferAddType LoopIndex;
 
+  /* If Debug suppport is enabled and Background Queuing / printing is enabled*/
+#if ((Enable_Debug_Support == Config_ON) && (Enable_Background_Print_Support == Config_ON))
 
+  /* Local variable to loop index*/
+  BufferAddType LoopIndex;
 
   /* Enter in to Critical Section*/
   portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
 
   /* Calculate */
 
-
-
-
-
-
-    /* Exit from Critical Section. */
+  /* Exit from Critical Section. */
   portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
 
+#endif /* End of ( (Enable_Debug_Support == Config_ON) && (Enable_Background_Print_Support == Config_ON))*/
 }
 

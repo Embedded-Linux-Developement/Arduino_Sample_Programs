@@ -25,7 +25,7 @@ void loop()
   // put your main code here, to run repeatedly:
 
 
-#if 1
+#if 0
 /* Test Case:- 1, 
    1. Test with half the Queue and each have Moderate Buffer sizes ~68*50 = 3400 Byte
  */
@@ -56,6 +56,22 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
 
 #if 0
 /* Test Case:- 3, 
+   1. Test with Double the Queue and consumming buffer less tthan max, Each request can use 25 Bytes
+   2. Grater than the allocated buffer 6144.
+   3. Expecting to waite for Queue / timeout ( based on configuration) to and max buffer usage shall not exceed 26*200 = 5200 Bytes
+
+ */
+
+for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue * 2); Loop_Index++)
+{
+   Debug_Trace("Hello I am here, To Test the debug Trace printing_ %03d", Loop_Index);
+}
+
+#endif
+
+
+#if 0
+/* Test Case:- 4, 
    1. Test with full buffer with Queue pending, uses 20 Queue and each buffer upto 368, So 368*20 = 7360 Byte
    2. Grater than the allocated buffer 6144.
    3. Expecting to waite for buffer to get free on buffer Index 16= ~ 368*16 = 5888 Bytes
@@ -71,7 +87,7 @@ for (Loop_Index = 0; Loop_Index < (20); Loop_Index++)
 
 
 #if 0
-/* Test Case:- 4, 
+/* Test Case:- 5, 
    1. Test with full buffer with Queue pending, uses 16 Queue and each buffer upto 368, So 368*20 = 7360 Byte
    2. Grater than the allocated buffer 6144.
    3. Expecting to No waite for buffer because shall give give enough delay for complete the printing. 16= ~ 368*16 = 5888 Bytes
@@ -87,7 +103,7 @@ for (Loop_Index = 0; Loop_Index < (17); Loop_Index++)
 
 
 #if 0
-/* Test Case:- 5, ( Over Night Test)
+/* Test Case:- 6, ( Over Night Test)
    1. Test with 200 Queue and each have Moderate Buffer sizes ~68*200 and 368*200 = 13600  + 73600 Byte
    2. Grater than the allocated buffer 6144.
    3. Expecting to waite for buffer and Queue to get free on buffer abd Required Queues.
@@ -100,6 +116,52 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue * 2); Loop_Index+
    Debug_Trace("Hello I am here, To Test the debug Trace printing_ %03d", Loop_Index);
    Debug_Trace("Hello printing_ %03d I am here, To Test the debug Trace printing_Hello I am here, To Test the debug Trace printing_Hello I am here, To Test the debug Trace printing_Hello I am here, To Test the debug Trace printing_Hello I am here, To Test the debug Trace printing_Hello I am here, To Test the debug Trace printing_Hello I am here, To Test the debug Trace", Loop_Index);
 
+}
+
+#endif
+
+
+
+#if 0
+/* Test Case:- 7, 
+   1. Test Buffer buffer case 96*64 = 6144 Byte
+       Buffer sizes = 96, 13 Character stack shall add for time stamp, then our string shall be 96-13 = 83 in this case bounder reach @ queue 64
+   2. Grater than the allocated buffer 6144.
+   3. Expecting No glitch @ index 63 to 67
+
+ */
+
+for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
+{
+   Debug_Trace("Index = %03d Hello I am here, To Test the debug Trace printing_,To Test the debug T", Loop_Index);
+}
+
+#endif
+
+
+
+#if 1
+/* Test Case:- 8, One Byte overlapping 
+   1. Test Buffer buffer case 96*64 = 6144 Byte
+       Buffer sizes = 96, 13 Character stack shall add for time stamp, then our string shall be 96-13 = 83 in this case bounder reach @ queue 64
+       @index 63 add string having one more byte, just  to see the overlapping works in cyclic buffer mechanism,
+   2. Grater than the allocated buffer 6144.
+   3. Expecting No glitch @ index 63 to 67
+
+ */
+
+for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
+{
+   /* Check if index is Not 63*/
+   if(Loop_Index != 63)
+   {
+     Debug_Trace("Index = %03d Hello I am here, To Test the debug Trace printing_,To Test the debug T", Loop_Index);
+   }
+   /*if Index in 63 add one more byte*/
+   else
+   {
+      Debug_Trace("Index = %03d Hello I am here, To Test the debug Trace printing_,To Test the debug T1", Loop_Index);
+   }
 }
 
 #endif
