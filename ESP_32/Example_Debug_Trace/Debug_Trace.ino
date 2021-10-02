@@ -1298,14 +1298,19 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
         if ((BackGround_Queue[LoopIndex].BUfferStartAdd + BackGround_Queue[LoopIndex].BUfferSize) > Max_BackGround_Buffer_Reserved)
         {
           /* Copy first and second set of data to the output buffer*/
-          sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s",
-                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd], &BackGround_Buffer[0]);
+          sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s%s%s",
+                  DebugBufferStream_StartCharactor,
+                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd], 
+                  &BackGround_Buffer[0],
+                  DebugBufferStream_TerminatationCharactor);
         }
         else /* If buffer is not segmented or on boarder.*/
         {
           /* Copy first and second set of data to the output buffer*/
-          sprintf(&InputBufferStream[Current_Consumed_memory], "%s",
-                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd]);
+          sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s%s",
+                  DebugBufferStream_StartCharactor,
+                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd],
+                  DebugBufferStream_TerminatationCharactor);
         }
 
         /* Calculate all one time buffer*/
@@ -1331,7 +1336,7 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
     } while ((LoopExit_flag != true) && (LoopIndex != BackGround_Queue_End_Pointer)); /* Loop till End point is detected.*/
 
     /* Add null character to the end of the string.*/
-    InputBufferStream[(BufferStreamSize - 1)] = '\0';
+    InputBufferStream[(Current_Consumed_memory)] = '\0';
   }
   /* No Queue fit into requested buffer or No trace request is generated yet.*/
   else if (BufferStreamSize >= 1) /* Terminate if atleast one byte is available, else do nothing.*/

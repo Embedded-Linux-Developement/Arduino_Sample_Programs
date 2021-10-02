@@ -25,6 +25,8 @@ void loop()
 {
   unsigned long Loop_Index = 200;
 
+ int incomingByte = 0; // for incoming serial data
+
   // put your main code here, to run repeatedly:
 
 
@@ -252,9 +254,34 @@ Populate_BufferStream_FromQueue(Test_Buffer_Stream, (Max_BackGround_Buffer_Reser
 
 Serial.write(Test_Buffer_Stream);
 
-vTaskDelay(10000 / portTICK_PERIOD_MS);
+
 #endif
 
 
+
+
+
+
+
+
+
+
+
+
+
+ Debug_Trace("\n-------------------------------------\n End of First Loop \n Please press any Key to continue...\n-------------------------------------", Loop_Index);
+
+// send data only when you receive data:
+  while (Serial.available() <= 0) 
+  {
+     /* Waite for 1 Sec*/
+     vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+
+  while (Serial.available() > 0) 
+  {
+    // read out all  the incoming byte:
+    incomingByte = Serial.read();
+  }
 
 }
