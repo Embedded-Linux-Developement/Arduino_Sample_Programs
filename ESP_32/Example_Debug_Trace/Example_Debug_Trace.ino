@@ -6,6 +6,9 @@
 #include "Debug_Trace.h"
 
 
+/* Golbal array for Buffer stream */
+char Test_Buffer_Stream[Max_BackGround_Buffer_Reserved + 400];
+
 void setup() {
    
   /* Init Trace support  */
@@ -185,7 +188,7 @@ vTaskDelay(15000 / portTICK_PERIOD_MS);
 
 
 
-#if 1
+#if 0
 /* Test Case:- 9, Queue and buffer fulling at same time, Such that No 
    1. Test Buffer buffer case (61*99) + (1 * 105) = 6144 Byte
        Buffer sizes = 61 for 99 Queue, 13 Character stack shall add for time stamp, then our string shall be 61-13 = 48 in this case bounder reach @ queue 99 Index
@@ -214,6 +217,43 @@ for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
 vTaskDelay(10000 / portTICK_PERIOD_MS);
 #endif
 
+
+
+
+#if 1
+/* Test Case:- 10, One Byte overlapping + Stream to Buffer test.
+   1. Test Buffer buffer case 96*64 = 6144 Byte
+       Buffer sizes = 96, 13 Character stack shall add for time stamp, then our string shall be 96-13 = 83 in this case bounder reach @ queue 64
+       @index 63 add string having one more byte, just  to see the overlapping works in cyclic buffer mechanism,
+   2. Grater than the allocated buffer 6144.
+   3. Expecting No glitch @ index 63 to 67
+
+ */
+
+for (Loop_Index = 0; Loop_Index < (Max_BackGround_Buffer_Queue); Loop_Index++)
+{
+   /* Check if index is Not 63*/
+   if(Loop_Index != 63)
+   {
+     Debug_Trace("Index = %03d Hello I am here, To Test the debug Trace printing_,To Test the debug T", Loop_Index);
+   }
+   /*if Index in 63 add one more byte*/
+   else
+   {
+      Debug_Trace("Index = %03d Hello I am here, To Test the debug Trace printing_,To Test the debug T1", Loop_Index);
+   }
+}
+
+
+/* Flesh for flesh the output*/
+vTaskDelay(15000 / portTICK_PERIOD_MS);
+
+Populate_BufferStream_FromQueue(Test_Buffer_Stream, (Max_BackGround_Buffer_Reserved + 400));
+
+Serial.write(Test_Buffer_Stream);
+
+vTaskDelay(10000 / portTICK_PERIOD_MS);
+#endif
 
 
 

@@ -83,6 +83,16 @@ typedef struct BackGround_Queue_Table_Tag {
 /* Memory required or storing Overrun / Data lost error string for further processing,*/
 #define OverRunError_Storage_Buffer_Sizes 104
 
+
+/* Generic Macro function to increment Cyclic Queue or Buffers 
+  VariableMaxLimit:- Shall considered that Index from 0 to VariableMaxLimit-1 */
+#define Increment_Cyclic_Variable(Variable_to_Increment, VariableMaxLimit) {if(++Variable_to_Increment >= VariableMaxLimit){Variable_to_Increment = 0;}}
+
+/* Generic Macro function to Decrement Cyclic Queue or Buffers 
+  VariableMaxLimit:- Shall considered that Index from 0 to VariableMaxLimit-1 */
+#define Decrement_Cyclic_Variable(Variable_to_Increment, VariableMaxLimit) ((Variable_to_Increment == 0)?(Variable_to_Increment = VariableMaxLimit - 1):((Variable_to_Increment >= VariableMaxLimit)?(Variable_to_Increment = VariableMaxLimit - 1):(--Variable_to_Increment)))
+
+
 /*******************************************************************************
  *  Variables and Constense
 *******************************************************************************/
@@ -1123,15 +1133,16 @@ Debug_Trace_FunStdRet_Type Debug_Trace(const char *fmt, ...)
 /* ************************************************************************
  * Function to populate the buffer stream based on the current available Queues.
  *  1. * InputBufferStream => First input argument shall be the starting address of the buffer to which string shall be populated.
- *  2. user needs to make sure it shall have enough memory to copy the requested memort size, else result in memory overflow.
- *  3. BufferStreamSize => Second argument is sizes of the required streaming buffer.
+ *  2. user needs to make sure it shall have enough memory to copy the requested memort size, else result in memory overflow. 
+ *  3. BufferStreamSize => Second argument is sizes of the required streaming buffer. enough space required considering Null character '\0' and error messages if required.
  *  4. It shall populate latest Queue which can fit within the requested memory. 
  *  5. Please use this function only when its required, because it will block serial printing for populate the string. 
  *  6. Its execution  time shall depends on the buffer sizes requested and total available queue to populate.
  *  7. If requested size if grater than "Max_BackGround_Buffer_Reserved", then shall consider only upto "Max_BackGround_Buffer_Reserved".
+ *  8. If request is not enough to store error report ( based on configuration) and if Not possible to includ even a single Queue, then buffer shall be empty.
  * ************************************************************************
  */
-void Populate_BufferStream_FromQueue(char * InputBufferStream, BufferAddType BufferStreamSize)
+void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType BufferStreamSize)
 {
 
   /* If Debug suppport is enabled and Background Queuing / printing is enabled*/
@@ -1139,15 +1150,198 @@ void Populate_BufferStream_FromQueue(char * InputBufferStream, BufferAddType Buf
 
   /* Local variable to loop index*/
   BufferAddType LoopIndex;
+  unsigned char LoopExit_flag;
+  /* Local variable to hold calculated buffer*/
+  BufferAddType Total_Calculated_QueueSize;
+  BufferAddType Current_Consumed_memory;
+  /* Local variable to hold total number of reserved byte required for each queue based on start and end delimiter*/
+  BufferAddType Byte_Per_Queue;
+  /* represent Current Queue starting point.*/
+  BufferAddType Local_Current_Queue_Starting_Point;
+
+  /* Calculate Number of byte required per Queue.*/
+  Byte_Per_Queue = strlen(DebugBufferStream_StartCharactor) + strlen(DebugBufferStream_TerminatationCharactor);
+
+  /* Set the init value, indicating No Queue is allocated as start.*/
+  Local_Current_Queue_Starting_Point = Invalid_Queue_Index;
+
+  /* Init the variable,*/
+  Total_Calculated_QueueSize = 0;
 
   /* Enter in to Critical Section*/
   portENTER_CRITICAL(&BackGround_Debug_Trace_Mutex);
 
-  /* Calculate */
+/* If Error trace needs to consider in final buffer.*/
+#if ((Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))
+
+  /* Calculate all one time buffer*/
+  Total_Calculated_QueueSize = strlen(ErrorDebugBufferStream_StartCharactor) +
+                               strlen(OverRunError_Storage_Buffer) +
+                               strlen(ErrorDebugBufferStream_TerminatationCharactor);
+  /* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0)
+
+  /* Calculate all one time buffer*/
+  Total_Calculated_QueueSize += strlen(ErrorDebugBufferStream_StartCharactor) +
+                                strlen(TimeOutError_Storage_Buffer) +
+                                strlen(ErrorDebugBufferStream_TerminatationCharactor);
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0) */
+
+#endif /* End of #if ( (Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))*/
+
+  /* Check if memory is filled*/
+  if (Total_Calculated_QueueSize < BufferStreamSize)
+  {
+
+    /* Calculate the starting Queue to be considered based on the requested memory*/
+    /* Loop Back from End point backwards to find the starting Queue.*/
+    LoopIndex = BackGround_Queue_End_Pointer;
+
+    /* Increment the End point, Such that same shall much once its decrement inside the loop.*/
+    Increment_Cyclic_Variable(LoopIndex, Max_BackGround_Buffer_Queue);
+
+    LoopExit_flag = false;
+
+    do
+    {
+      /* Decrement the index in cyclic pasion.*/
+      Decrement_Cyclic_Variable(LoopIndex, Max_BackGround_Buffer_Queue);
+
+      /* Check if Queue is in correct state to consider.*/
+      if ((BackGround_Queue[LoopIndex].Queue_Status != BackGround_Queue_FillInProgres) &&
+          (BackGround_Queue[LoopIndex].Queue_Status != BackGround_Queue_Empty) &&
+          (BackGround_Queue[LoopIndex].BUfferSize != 0)) /* If buffer sizes is Zero, No needs to consider.*/
+      {
+        /* Check if buffer of this Queue fits in the current buffer to populate.
+            BackGround_Queue[LoopIndex].BUfferSize-1, is considered because space for terminatation characer is not required to consider.*/
+        if ((Total_Calculated_QueueSize + Byte_Per_Queue + (BackGround_Queue[LoopIndex].BUfferSize - 1)) < BufferStreamSize)
+        {
+          /* UPdate the Total calculated memory.*/
+          Total_Calculated_QueueSize += (Byte_Per_Queue + (BackGround_Queue[LoopIndex].BUfferSize - 1));
+
+          /* Update the starting Queue to current Index,*/
+          Local_Current_Queue_Starting_Point = LoopIndex;
+        }
+        else /* Enough memory not present So exiting the loop*/
+        {
+          /* Exit the Loop*/
+          LoopExit_flag = true;
+        }
+
+      } /* End of Queue status and size validatation.*/
+
+    } while ((LoopExit_flag != true) && (LoopIndex != BackGround_Queue_Start_Pointer)); /* Loop till start point is detected.*/
+
+  } /*End of if Total_Calculated_QueueSize < BufferStreamSize*/
+  else
+  {
+    /* DO nothing.*/
+  }
+
+  /* Check if atleast on buffer can fit into the Queue, Else return blank string. */
+  if ((Local_Current_Queue_Starting_Point != Invalid_Queue_Index) && (Total_Calculated_QueueSize < BufferStreamSize))
+  {
+    /* Set current consumed memory as zero.*/
+    Current_Consumed_memory = 0;
+
+    /* Populate Error codes based on the configuration.*/
+
+/* If Error trace needs to consider in final buffer.*/
+#if ((Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))
+
+    /* String copy the Data Lose Error messages */
+    sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s%s", ErrorDebugBufferStream_StartCharactor,
+            OverRunError_Storage_Buffer,
+            ErrorDebugBufferStream_TerminatationCharactor);
+    /* Calculate current consumed Buffer*/
+    Current_Consumed_memory = strlen(ErrorDebugBufferStream_StartCharactor) +
+                              strlen(OverRunError_Storage_Buffer) +
+                              strlen(ErrorDebugBufferStream_TerminatationCharactor);
+
+    /* Check wheather time out is Supported.*/
+#if (BackGround_Debug_Trace_TimeOut > 0)
+
+    /* String copy the Time out Error messages, and overright the previous null character '\0'.*/
+    sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s%s", ErrorDebugBufferStream_StartCharactor,
+            TimeOutError_Storage_Buffer,
+            ErrorDebugBufferStream_TerminatationCharactor);
+
+    /* Calculate all one time buffer*/
+    Current_Consumed_memory += strlen(ErrorDebugBufferStream_StartCharactor) +
+                               strlen(TimeOutError_Storage_Buffer) +
+                               strlen(ErrorDebugBufferStream_TerminatationCharactor);
+#endif /* End of (BackGround_Debug_Trace_TimeOut > 0) */
+
+#endif /* End of #if ( (Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))*/
+
+    /* Loop for each Queue buffer from starting point.*/
+    /* Set the starting point of the queue based on previousely calculated Queue location.*/
+    LoopIndex = Local_Current_Queue_Starting_Point;
+
+    /* Decrement the current starting point, Such that same shall much once its incremented inside the loop.*/
+    Decrement_Cyclic_Variable(LoopIndex, Max_BackGround_Buffer_Queue);
+
+    LoopExit_flag = false;
+
+    do
+    {
+      /* Increment the index in cyclic pasion.*/
+      Increment_Cyclic_Variable(LoopIndex, Max_BackGround_Buffer_Queue);
+
+      /* Check if Queue is in correct state to consider.*/
+      if ((BackGround_Queue[LoopIndex].Queue_Status != BackGround_Queue_FillInProgres) &&
+          (BackGround_Queue[LoopIndex].Queue_Status != BackGround_Queue_Empty) &&
+          (BackGround_Queue[LoopIndex].BUfferSize != 0)) /* If buffer sizes is Zero, No needs to consider.*/
+      {
+
+        /* If Buffer memory allocation for this queue is on border, or a border case*/
+        if ((BackGround_Queue[LoopIndex].BUfferStartAdd + BackGround_Queue[LoopIndex].BUfferSize) > Max_BackGround_Buffer_Reserved)
+        {
+          /* Copy first and second set of data to the output buffer*/
+          sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s",
+                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd], &BackGround_Buffer[0]);
+        }
+        else /* If buffer is not segmented or on boarder.*/
+        {
+          /* Copy first and second set of data to the output buffer*/
+          sprintf(&InputBufferStream[Current_Consumed_memory], "%s",
+                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd]);
+        }
+
+        /* Calculate all one time buffer*/
+        Current_Consumed_memory += ((BackGround_Queue[LoopIndex].BUfferSize - 1) + Byte_Per_Queue);
+
+        /* Check if buffer all calculated sizes consumed.*/
+        if (Current_Consumed_memory >= Total_Calculated_QueueSize)
+        {
+          /* Exit the Loop*/
+          LoopExit_flag = true;
+        }
+        else
+        {
+          /* Do Nothing.*/
+        }
+
+      } /* End of Queue status and size validatation.*/
+      else
+      {
+        /* Do nothing.*/
+      }
+
+    } while ((LoopExit_flag != true) && (LoopIndex != BackGround_Queue_End_Pointer)); /* Loop till End point is detected.*/
+
+    /* Add null character to the end of the string.*/
+    InputBufferStream[(BufferStreamSize - 1)] = '\0';
+  }
+  /* No Queue fit into requested buffer or No trace request is generated yet.*/
+  else if (BufferStreamSize >= 1) /* Terminate if atleast one byte is available, else do nothing.*/
+  {
+    /* Terminate first character itself.*/
+    InputBufferStream[0] = '\0';
+  }
 
   /* Exit from Critical Section. */
   portEXIT_CRITICAL(&BackGround_Debug_Trace_Mutex);
 
 #endif /* End of ( (Enable_Debug_Support == Config_ON) && (Enable_Background_Print_Support == Config_ON))*/
 }
-

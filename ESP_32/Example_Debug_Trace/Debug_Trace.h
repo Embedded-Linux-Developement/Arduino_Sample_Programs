@@ -246,6 +246,39 @@ Buffer streaming:-
 */
 #define DebugBufferStream_TerminatationCharactor "\n"
 
+
+/* This Macro is to define the starting character / string to be transmits along with each Error messages, in Debug Buffer Stream.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall used for Buffer streaming, If enabled option to include latest error Trace (Enable_IncludeLatestErrorTrace = Config_ON).
+   5. It shall not use for Error reporting printing.
+   6. It shall consumed the buffer for population.
+   7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
+   8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
+*/
+#define ErrorDebugBufferStream_StartCharactor "++++\n"
+
+
+/* This Macro is to define the character /strung to be used as each buffer terminatation, in Debug Buffer Stream.
+   1. By default '\n' being used, 
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall used for Buffer streaming, If enabled option to include latest error Trace (Enable_IncludeLatestErrorTrace = Config_ON).
+   5. It shall not use for Error reporting printing.
+   6. It shall consumed the buffer for population.
+   7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
+   8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
+*/
+#define ErrorDebugBufferStream_TerminatationCharactor "----\n"
+
+
+
+
+
+
+
+
 /*-----------------------------------------------------------------------------
  *  Debug Trace and Buffer streaming Configuration END
 -------------------------------------------------------------------------------*/
