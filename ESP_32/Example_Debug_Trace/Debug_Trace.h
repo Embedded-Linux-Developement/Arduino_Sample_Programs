@@ -233,7 +233,7 @@ Buffer streaming:-
    5. It shall affect or consumed size in buffer.
    6. It shall be helpfull to add html tags, as per the design.
 */
-#define DebugBufferStream_StartCharactor ""
+#define DebugBufferStream_StartCharactor "--"
 
 
 /* This Macro is to define the character /strung to be used as each buffer terminatation in populated buffer stream.
@@ -244,7 +244,7 @@ Buffer streaming:-
    5. It shall affect or consumed size in buffer.
    6. It shall be helpfull to add html tags, as per the design.
 */
-#define DebugBufferStream_TerminatationCharactor "\n"
+#define DebugBufferStream_TerminatationCharactor "<br>\n"
 
 
 /* This Macro is to define the starting character / string to be transmits along with each Error messages, in Debug Buffer Stream.
@@ -257,7 +257,7 @@ Buffer streaming:-
    7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
    8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
 */
-#define ErrorDebugBufferStream_StartCharactor "++++\n"
+#define ErrorDebugBufferStream_StartCharactor "<p style=\"color:red\">"
 
 
 /* This Macro is to define the character /strung to be used as each buffer terminatation, in Debug Buffer Stream.
@@ -270,7 +270,7 @@ Buffer streaming:-
    7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
    8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
 */
-#define ErrorDebugBufferStream_TerminatationCharactor "----\n"
+#define ErrorDebugBufferStream_TerminatationCharactor "</p>\n"
 
 
 
