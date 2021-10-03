@@ -1174,10 +1174,14 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
 /* If Error trace needs to consider in final buffer.*/
 #if ((Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))
 
+  /*Calculate the memory for Pre and Post delimoter for error messages*/
+  Total_Calculated_QueueSize += strlen(ErrorDebugBufferStream_Pre_delimoter) +
+                                strlen(ErrorDebugBufferStream_Post_delimoter);
+
   /* Calculate all one time buffer*/
-  Total_Calculated_QueueSize = strlen(ErrorDebugBufferStream_StartCharactor) +
-                               strlen(OverRunError_Storage_Buffer) +
-                               strlen(ErrorDebugBufferStream_TerminatationCharactor);
+  Total_Calculated_QueueSize += strlen(ErrorDebugBufferStream_StartCharactor) +
+                                strlen(OverRunError_Storage_Buffer) +
+                                strlen(ErrorDebugBufferStream_TerminatationCharactor);
   /* Check wheather time out is Supported.*/
 #if (BackGround_Debug_Trace_TimeOut > 0)
 
@@ -1188,6 +1192,10 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
 #endif /* End of (BackGround_Debug_Trace_TimeOut > 0) */
 
 #endif /* End of #if ( (Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))*/
+
+  /*Calculate the memory for Pre and Post delimoter for Debug Trace messages*/
+  Total_Calculated_QueueSize += strlen(DebugBufferStream_Pre_delimoter) +
+                                strlen(DebugBufferStream_Post_delimoter);
 
   /* Check if memory is filled*/
   if (Total_Calculated_QueueSize < BufferStreamSize)
@@ -1249,14 +1257,19 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
 /* If Error trace needs to consider in final buffer.*/
 #if ((Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))
 
+    /* String copy the Error message Pre-delimoter*/
+    sprintf(&InputBufferStream[Current_Consumed_memory], "%s", ErrorDebugBufferStream_Pre_delimoter);
+    /* Calculate current consumed Buffer*/
+    Current_Consumed_memory += strlen(ErrorDebugBufferStream_Pre_delimoter);
+
     /* String copy the Data Lose Error messages */
     sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s%s", ErrorDebugBufferStream_StartCharactor,
             OverRunError_Storage_Buffer,
             ErrorDebugBufferStream_TerminatationCharactor);
     /* Calculate current consumed Buffer*/
-    Current_Consumed_memory = strlen(ErrorDebugBufferStream_StartCharactor) +
-                              strlen(OverRunError_Storage_Buffer) +
-                              strlen(ErrorDebugBufferStream_TerminatationCharactor);
+    Current_Consumed_memory += strlen(ErrorDebugBufferStream_StartCharactor) +
+                               strlen(OverRunError_Storage_Buffer) +
+                               strlen(ErrorDebugBufferStream_TerminatationCharactor);
 
     /* Check wheather time out is Supported.*/
 #if (BackGround_Debug_Trace_TimeOut > 0)
@@ -1272,6 +1285,11 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
                                strlen(ErrorDebugBufferStream_TerminatationCharactor);
 #endif /* End of (BackGround_Debug_Trace_TimeOut > 0) */
 
+    /* String copy the Error message Post-delimoter*/
+    sprintf(&InputBufferStream[Current_Consumed_memory], "%s", ErrorDebugBufferStream_Post_delimoter);
+    /* Calculate current consumed Buffer*/
+    Current_Consumed_memory += strlen(ErrorDebugBufferStream_Post_delimoter);
+
 #endif /* End of #if ( (Enable_IncludeLatestErrorTrace == Config_ON) && (Enable_Error_Reporting == Config_ON))*/
 
     /* Loop for each Queue buffer from starting point.*/
@@ -1282,6 +1300,11 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
     Decrement_Cyclic_Variable(LoopIndex, Max_BackGround_Buffer_Queue);
 
     LoopExit_flag = false;
+
+    /* String copy the Debug Trace Buffer / string Pre-delimoter*/
+    sprintf(&InputBufferStream[Current_Consumed_memory], "%s", DebugBufferStream_Pre_delimoter);
+    /* Calculate current consumed Buffer*/
+    Current_Consumed_memory += strlen(DebugBufferStream_Pre_delimoter);
 
     do
     {
@@ -1300,7 +1323,7 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
           /* Copy first and second set of data to the output buffer*/
           sprintf(&InputBufferStream[Current_Consumed_memory], "%s%s%s%s",
                   DebugBufferStream_StartCharactor,
-                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd], 
+                  &BackGround_Buffer[BackGround_Queue[LoopIndex].BUfferStartAdd],
                   &BackGround_Buffer[0],
                   DebugBufferStream_TerminatationCharactor);
         }
@@ -1334,6 +1357,11 @@ void Populate_BufferStream_FromQueue(char *InputBufferStream, BufferAddType Buff
       }
 
     } while ((LoopExit_flag != true) && (LoopIndex != BackGround_Queue_End_Pointer)); /* Loop till End point is detected.*/
+
+    /* String copy the Debug Trace Buffer / string Post-delimoter*/
+    sprintf(&InputBufferStream[Current_Consumed_memory], "%s", DebugBufferStream_Post_delimoter);
+    /* Calculate current consumed Buffer*/
+    Current_Consumed_memory += strlen(DebugBufferStream_Post_delimoter);
 
     /* Add null character to the end of the string.*/
     InputBufferStream[(Current_Consumed_memory)] = '\0';

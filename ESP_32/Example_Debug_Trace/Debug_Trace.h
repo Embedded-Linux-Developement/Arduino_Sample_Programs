@@ -233,7 +233,7 @@ Buffer streaming:-
    5. It shall affect or consumed size in buffer.
    6. It shall be helpfull to add html tags, as per the design.
 */
-#define DebugBufferStream_StartCharactor "--"
+#define DebugBufferStream_StartCharactor ""
 
 
 /* This Macro is to define the character /strung to be used as each buffer terminatation in populated buffer stream.
@@ -257,7 +257,7 @@ Buffer streaming:-
    7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
    8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
 */
-#define ErrorDebugBufferStream_StartCharactor "<p style=\"color:red\">"
+#define ErrorDebugBufferStream_StartCharactor ""
 
 
 /* This Macro is to define the character /strung to be used as each buffer terminatation, in Debug Buffer Stream.
@@ -270,14 +270,58 @@ Buffer streaming:-
    7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
    8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
 */
-#define ErrorDebugBufferStream_TerminatationCharactor "</p>\n"
+#define ErrorDebugBufferStream_TerminatationCharactor "<br>\n"
 
 
 
+/* This Macro is to define the Pre-delimoter before starting the Debug Queue buffer strings.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall not use for Serial output.
+   5. It shall affect or consumed size in buffer.
+   6. It shall only add Pre-delimoter string befor starting to populate Buffer, only once.
+   7. It shall be helpfull to add html tags, as per the design.
+*/
+#define DebugBufferStream_Pre_delimoter "<h2> Debug Trave Messages </h2> <p> "
 
 
+/* This Macro is to define the Post-delimoter After populating the Debug Queue buffer strings.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall not use for Serial output.
+   5. It shall affect or consumed size in buffer.
+   6. It shall only add Post-delimoter string After starting to populate Buffer, only once at the end.
+   7 It shall be helpfull to add html tags, as per the design.
+*/
+#define DebugBufferStream_Post_delimoter "</p><hr style=\"border: 1px dashed blue\">"
 
+/* This Macro is to define the Pre-delimoter before start populating the Error strings into buffer stream, at once.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall used for Buffer streaming, If enabled option to include latest error Trace (Enable_IncludeLatestErrorTrace = Config_ON).
+   5. It shall not use for Error reporting printing.
+   6. It shall consumed the buffer for population.
+   7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
+   8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
+   9. It shall only add Pre-delimoter string befor starting to populate Bufferstream for Error messages, only once.
+*/
+#define ErrorDebugBufferStream_Pre_delimoter "<h2> Debug Trace Error Hadling </h2><p style=\"color:red\">"
 
+/* This Macro is to define the Post-delimoter after compliting populating the Error strings into buffer stream, at once.
+   1. By default "" being used, Indicating No start charactor/ string
+   2. you can use any string also.
+   3. Please make sure same should be within single / double quote 
+   4. It shall used for Buffer streaming, If enabled option to include latest error Trace (Enable_IncludeLatestErrorTrace = Config_ON).
+   5. It shall not use for Error reporting printing.
+   6. It shall consumed the buffer for population.
+   7. Please do not have any limit, only only limitation is the requested buffer for populating the buffer stream.
+   8. Shall applicable only if error reporting is enabled, Enable_Error_Reporting = Config_ON.
+   9. It shall only add Post-delimoter at the end after the population of Bufferstream for Error messages, only once.
+*/
+#define ErrorDebugBufferStream_Post_delimoter "</p><hr style=\"border: 1px dashed Green\">"
 
 /*-----------------------------------------------------------------------------
  *  Debug Trace and Buffer streaming Configuration END

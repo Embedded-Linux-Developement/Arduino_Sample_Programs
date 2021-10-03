@@ -27,6 +27,8 @@ TaskHandle_t WebServer_Processing_Task_Handle;
 const char* ssid = "UPdate Yours";
 const char* password = "UPdate Yours";
 
+
+
 /*Define timeout time in milliseconds (example: 2000ms = 2s)*/
 #define html_TimeOut_Clint 2000
 
@@ -421,8 +423,6 @@ void Process_Webserver(void)
                   /* Get Queue string*/
                   Populate_BufferStream_FromQueue(Test_Buffer_Stream, (2000));
 
-
-                  client.print(Debug_Body_1);
                   client.print(Test_Buffer_Stream);
 
 

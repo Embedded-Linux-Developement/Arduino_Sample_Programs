@@ -9,24 +9,22 @@ Description:- Simple header file to store Html templates
 #define Html_Templates_H
 
 /* Define Header part*/
-const char Debug_Header_Temp[] = " \
-<!DOCTYPE html> \n\
-<html lang=\"en-us\"> \n\
-<head> \n\
-  <meta http-equiv=\"refresh\" content=\"1\">\n\
-  <title>Trace Debug</title> \n\
-</head>  \n\
-<body> \n ";
+const char Debug_Header_Temp[] = "<!DOCTYPE html> \n \
+<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\">  \n \
+   <title>Trace Debug</title>  \n \
+   <!-- Add 1 Sec Auto refresh -->  \n \
+   <meta http-equiv=\"refresh\" content=\"1\">   \n \
+ </head>  \n \
+ <body>  \n \
+   <h1 style=\"background-color:Green;text-align: center;\">Following are the Debug trace Live Output</h1>   \n \
+   <div style=\"text-align: center;\"> ";
 
 
 
-const char Debug_Footer_Temp[] = " </p>\n </body> \n\
+const char Debug_Footer_Temp[] = "</div> \n </body> \n\
 </html>";
 
 
-const char Debug_Body_1[] = " \n\
-<h1>Following are the Debug trace Output</h1> \n\
-<p>  \n";
 
 
 
